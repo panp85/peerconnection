@@ -3,6 +3,7 @@
 #include "janus/bundle_impl.h"
 #include "janus/janus_error.hpp"
 #include "janus/janus_commands.hpp"
+#include <iostream>
 
 namespace Janus {
 
@@ -180,6 +181,7 @@ namespace Janus {
       auto id = message.value("data", nlohmann::json::object()).value("id", (int64_t) 0);
       auto idAsString = std::to_string(id);
       this->_transport->sessionId(idAsString);
+	  std::cout << "CREATE ok, go to ATTACH" << std::endl;
       this->dispatch(JanusCommands::ATTACH, context);
 
       return;

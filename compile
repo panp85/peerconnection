@@ -1,0 +1,2 @@
+gn gen -C out/linux  --args="is_debug=false"
+ninja -C out/linux

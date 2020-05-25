@@ -18,6 +18,11 @@
 #ifdef WIN32
 #include "rtc_base/win32_socket_server.h"
 #endif
+#include "janus/janus_conf.hpp"
+#include "janus/protocol_delegate.hpp"
+#include "janus/platform_impl.h"
+#include "janus/janus_impl.h"
+#include <iostream>
 
 namespace {
 
@@ -81,7 +86,7 @@ void PeerConnectionClient::RegisterObserver(
   RTC_DCHECK(!callback_);
   callback_ = callback;
 }
-
+/*
 void PeerConnectionClient::Connect(const std::string& server,
                                    int port,
                                    const std::string& client_name) {
@@ -115,6 +120,19 @@ void PeerConnectionClient::Connect(const std::string& server,
   } else {
     DoConnect();
   }
+}
+*/
+
+void PeerConnectionClient::Connect(const std::string& server,
+                                   int port,
+                                   const std::string& client_name) {
+    //std::shared_ptr<PeerFactory> _peerFactory;
+    auto conf = std::make_shared<Janus::JanusProxyConf>();
+    auto platformImpl = std::make_shared<Janus::PlatformImplImpl>(factory);
+	auto delegate = std::make_shared<Janus::JanusProxyProtocolDelegate>();
+	auto janusImpl = std::make_shared<Janus::JanusImpl>(conf, platformImpl, delegate);
+	
+	janusImpl->init();
 }
 
 void PeerConnectionClient::OnResolveResult(
