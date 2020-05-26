@@ -5,6 +5,8 @@
 
 #include <memory>
 #include <string>
+//#include "examples/peerconnection/client/peer_connection_client.h"
+//#include "examples/peerconnection/client/conductor.h"
 
 namespace Janus {
 
@@ -26,40 +28,5 @@ public:
 
     virtual void onHangup(const std::string & reason) = 0;
 };
-
-class JanusProxyProtocolDelegate final : public ProtocolDelegate
-{
-public:
-    JanusProxyProtocolDelegate();
-    ~JanusProxyProtocolDelegate() = default;
-
-    void onReady() override;
-    void onClose() override;
-    void onError(const ::Janus::JanusError & error, const std::shared_ptr<::Janus::Bundle> & context) override;
-    void onEvent(const std::shared_ptr<::Janus::JanusEvent> & event, const std::shared_ptr<::Janus::Bundle> & context) override;
-    void onHangup(const std::string & reason) override;
-};
-
-
-JanusProxyProtocolDelegate::JanusProxyProtocolDelegate(){}
-void JanusProxyProtocolDelegate::onReady() {
-	
-}
-
-void JanusProxyProtocolDelegate::onClose() {
-	
-}
-
-void JanusProxyProtocolDelegate::onError(const ::Janus::JanusError & c_error, const std::shared_ptr<::Janus::Bundle> & c_context) {
-	
-}
-
-void JanusProxyProtocolDelegate::onEvent(const std::shared_ptr<::Janus::JanusEvent> & c_event, const std::shared_ptr<::Janus::Bundle> & c_context) {
-	
-}
-
-void JanusProxyProtocolDelegate::onHangup(const std::string & c_reason) {
-	
-}
 
 }  // namespace Janus

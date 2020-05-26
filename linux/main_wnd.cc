@@ -378,7 +378,8 @@ void GtkMainWnd::OnClicked(GtkWidget* widget) {
   server_ = gtk_entry_get_text(GTK_ENTRY(server_edit_));
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
-  callback_->StartLogin(server_, port);
+  //callback_->StartLogin(server_, port);
+  callback_->start(server_, port);
 }
 
 void GtkMainWnd::OnKeyPress(GtkWidget* widget, GdkEventKey* key) {

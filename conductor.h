@@ -48,6 +48,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool connection_active() const;
 
   void Close() override;
+ 	void start(const std::string& server,
+				 int port) override;
 
  protected:
   ~Conductor();
@@ -76,7 +78,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   void OnIceConnectionChange(
       webrtc::PeerConnectionInterface::IceConnectionState new_state) override {}
   void OnIceGatheringChange(
-      webrtc::PeerConnectionInterface::IceGatheringState new_state) override {}
+      webrtc::PeerConnectionInterface::IceGatheringState new_state) override;
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override;
   void OnIceConnectionReceivingChange(bool receiving) override {}
 
@@ -97,6 +99,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   void OnMessageSent(int err) override;
 
   void OnServerConnectionFailure() override;
+  void OnReady() override;
 
   //
   // MainWndCallback implementation.

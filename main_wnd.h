@@ -32,6 +32,8 @@ class MainWndCallback {
   virtual void DisconnectFromCurrentPeer() = 0;
   virtual void UIThreadCallback(int msg_id, void* data) = 0;
   virtual void Close() = 0;
+  virtual void start(const std::string& server,
+				int port);
 
  protected:
   virtual ~MainWndCallback() {}

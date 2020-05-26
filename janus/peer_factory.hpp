@@ -22,24 +22,14 @@ class JanusPeerFactory : public PeerFactory
 //	class JavaProxy final : ::djinni::JavaProxyHandle<JavaProxy>, public ::Janus::PeerFactory
 {
 public:
-	JanusPeerFactory(JniType j);
-	~JanusPeerFactory();
+	JanusPeerFactory(){};
+	~JanusPeerFactory(){};
 
 	std::shared_ptr<::Janus::Peer> create(int64_t id, const std::shared_ptr<::Janus::Protocol> & owner) override;
-
+	void onIceCompleted();
+	std::shared_ptr<::Janus::Protocol> c_owner;
+	int64_t c_id;
 };
-
-
-std::shared_ptr<::Janus::Peer> JanusPeerFactory::create(int64_t c_id, const std::shared_ptr<::Janus::Protocol> & c_owner) {
-	auto jniEnv = ::djinni::jniGetThreadEnv();
-	::djinni::JniLocalScope jscope(jniEnv, 10);
-	const auto& data = ::djinni::JniClass<::djinni_generated::NativePeerFactory>::get();
-	auto jret = jniEnv->CallObjectMethod(Handle::get().get(), data.method_create,
-										 ::djinni::get(::djinni::I64::fromCpp(jniEnv, c_id)),
-										 ::djinni::get(::djinni_generated::NativeProtocol::fromCpp(jniEnv, c_owner)));
-	::djinni::jniExceptionCheck(jniEnv);
-	return NULL;
-}
 
 
 }  // namespace Janus

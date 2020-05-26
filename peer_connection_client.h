@@ -20,6 +20,13 @@
 #include "rtc_base/signal_thread.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 
+#include "janus/janus_conf.hpp"
+
+#include "janus/peer_factory.hpp"
+
+#include "janus/protocol_delegate.hpp"
+#include "janus/janus_impl.h"
+
 typedef std::map<int, std::string> Peers;
 
 struct PeerConnectionClientObserver {
@@ -30,9 +37,27 @@ struct PeerConnectionClientObserver {
   virtual void OnMessageFromPeer(int peer_id, const std::string& message) = 0;
   virtual void OnMessageSent(int err) = 0;
   virtual void OnServerConnectionFailure() = 0;
+  virtual void OnReady() = 0;
 
  protected:
   virtual ~PeerConnectionClientObserver() {}
+};
+
+
+class JanusProxyProtocolDelegate: public Janus::ProtocolDelegate {
+public:
+    //JanusProxyProtocolDelegate(){};
+    //~JanusProxyProtocolDelegate(){};
+
+    void onReady() override;
+    void onClose() override;
+    void onError(const ::Janus::JanusError & error, const std::shared_ptr<::Janus::Bundle> & context) override;
+    void onEvent(const std::shared_ptr<::Janus::JanusEvent> & event, const std::shared_ptr<::Janus::Bundle> & context) override;
+    void onHangup(const std::string & reason) override;
+
+	
+	PeerConnectionClientObserver* callback_;
+	void setCallback(PeerConnectionClientObserver* callback);
 };
 
 class PeerConnectionClient : public sigslot::has_slots<>,
@@ -59,6 +84,10 @@ class PeerConnectionClient : public sigslot::has_slots<>,
   void Connect(const std::string& server,
                int port,
                const std::string& client_name);
+  void Start(const std::string& server,
+               int port);
+  
+  void onIceCompleted();
 
   bool SendToPeer(int peer_id, const std::string& message);
   bool SendHangUp(int peer_id);
@@ -127,6 +156,15 @@ class PeerConnectionClient : public sigslot::has_slots<>,
   Peers peers_;
   State state_;
   int my_id_;
+  
+public:
+	std::shared_ptr<Janus::JanusConf> _conf;
+	std::shared_ptr<Janus::JanusPeerFactory> _factory;
+	std::shared_ptr<Janus::PlatformImplImpl> _platformImpl;
+	std::shared_ptr<JanusProxyProtocolDelegate> _delegate;
+	std::shared_ptr<Janus::Janus> _janusImpl;
 };
+
+
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_PEER_CONNECTION_CLIENT_H_

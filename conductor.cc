@@ -247,6 +247,16 @@ void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
   SendMessage(writer.write(jmessage));
 }
 
+
+void Conductor::OnIceGatheringChange(
+    webrtc::PeerConnectionInterface::IceGatheringState new_state) {
+    if(new_state != webrtc::PeerConnectionInterface::kIceConnectionCompleted) {
+      return;
+    }
+    client_->onIceCompleted();
+}
+
+
 //
 // PeerConnectionClientObserver implementation.
 //
@@ -406,6 +416,11 @@ void Conductor::StartLogin(const std::string& server, int port) {
   client_->Connect(server, port, GetPeerName());
 }
 
+void Conductor::start(const std::string& server, int port){
+	server_ = server;
+	client_->Start(server,port);
+}
+
 void Conductor::DisconnectFromServer() {
   if (client_->is_connected())
     client_->SignOut();
@@ -429,6 +444,23 @@ void Conductor::ConnectToPeer(int peer_id) {
     main_wnd_->MessageBox("Error", "Failed to initialize PeerConnection", true);
   }
 }
+
+void Conductor::OnReady() {
+  if (peer_connection_.get()) {
+    main_wnd_->MessageBox(
+        "Error", "We only support connecting to one peer at a time", true);
+    return;
+  }
+
+  if (InitializePeerConnection()) {
+    peer_id_ = 11111;
+    peer_connection_->CreateOffer(
+        this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  } else {
+    main_wnd_->MessageBox("Error", "Failed to initialize PeerConnection", true);
+  }
+}
+
 
 void Conductor::AddTracks() {
   if (!peer_connection_->GetSenders().empty()) {

@@ -715,27 +715,39 @@ if (is_linux || is_win) {
         "peerconnection/client/linux/main_wnd.h",
       ]
       sources += [
-        "peerconnection/janus/async.cc",
-        "peerconnection/janus/bundle_impl.cc",
-        "peerconnection/janus/constraints_builder_impl.cc",
-        "peerconnection/janus/http.cc",
-        "peerconnection/janus/janus_api.cc",
-        "peerconnection/janus/janus_event_impl.cc",
-        "peerconnection/janus/janus_impl.cc",
-        "peerconnection/janus/platform_impl.cc",
-        "peerconnection/janus/random.cc",
-        "peerconnection/janus/transport.cc",
-        "peerconnection/janus/plugins/janus_plugin.cc",
-        "peerconnection/janus/plugins/janus_plugin_echotest.cc",
-        "peerconnection/janus/plugins/janus_plugin_streaming.cc",
-        "peerconnection/janus/plugins/janus_plugin_videoroom.cc",
+        "peerconnection/client/janus/async.cc",
+        "peerconnection/client/janus/bundle_impl.cc",
+        "peerconnection/client/janus/constraints_builder_impl.cc",
+        "peerconnection/client/janus/http.cc",
+        "peerconnection/client/janus/janus_api.cc",
+        "peerconnection/client/janus/janus_event_impl.cc",
+        "peerconnection/client/janus/janus_impl.cc",
+        "peerconnection/client/janus/platform_impl.cc",
+        "peerconnection/client/janus/random.cc",
+        "peerconnection/client/janus/transport.cc",
+        "peerconnection/client/janus/janus_commands.cpp",
+        "peerconnection/client/janus/janus_plugins.cpp",
+        "peerconnection/client/janus/janus_p_types.cpp",
+        "peerconnection/client/janus/plugins/janus_plugin.cc",
+        "peerconnection/client/janus/plugins/janus_plugin_echotest.cc",
+        "peerconnection/client/janus/plugins/janus_plugin_streaming.cc",
+        "peerconnection/client/janus/plugins/janus_plugin_videoroom.cc",
       ]
-      cflags = [ "-Wno-deprecated-declarations" ]
+      cflags = [ "-Wno-deprecated-declarations",
+      ]
+      include_dirs = [ "./peerconnection/client/include",
+                       "./peerconnection/client",
+                       "./peerconnection/client/curl/usr/include",
+      ]
+      ldflags = [
+                 "-L../../examples/peerconnection/client/curl/usr/lib",
+      ]
       libs = [
         "X11",
         "Xcomposite",
         "Xext",
         "Xrender",
+        "curl"
       ]
       deps += [ "//build/config/linux/gtk" ]
     }

@@ -25,13 +25,7 @@ class JanusProxyConf final : public JanusConf
 		std::string url() override;
 		std::string plugin() override;
 };
-std::string	JanusProxyConf::url(){
-	return "http://139.196.204.25:8088";
-}
 
-std::string JanusProxyConf::plugin(){
-	return "janus.plugin.echotest";
-}
 
 
 }  // namespace Janus

@@ -86,7 +86,7 @@ void PeerConnectionClient::RegisterObserver(
   RTC_DCHECK(!callback_);
   callback_ = callback;
 }
-/*
+
 void PeerConnectionClient::Connect(const std::string& server,
                                    int port,
                                    const std::string& client_name) {
@@ -121,18 +121,63 @@ void PeerConnectionClient::Connect(const std::string& server,
     DoConnect();
   }
 }
-*/
 
-void PeerConnectionClient::Connect(const std::string& server,
-                                   int port,
-                                   const std::string& client_name) {
+
+void PeerConnectionClient::Start(const std::string& server,
+                                   int port) {
     //std::shared_ptr<PeerFactory> _peerFactory;
-    auto conf = std::make_shared<Janus::JanusProxyConf>();
-    auto platformImpl = std::make_shared<Janus::PlatformImplImpl>(factory);
-	auto delegate = std::make_shared<Janus::JanusProxyProtocolDelegate>();
-	auto janusImpl = std::make_shared<Janus::JanusImpl>(conf, platformImpl, delegate);
+    _conf = std::make_shared<Janus::JanusProxyConf>();
+	_factory = std::make_shared<Janus::JanusPeerFactory>();
+    _platformImpl = std::make_shared<Janus::PlatformImplImpl>(_factory);
+	_delegate = std::make_shared<JanusProxyProtocolDelegate>();
+	_janusImpl = std::make_shared<Janus::JanusImpl>(_conf, _platformImpl, _delegate);
 	
-	janusImpl->init();
+	_delegate->setCallback(callback_);
+	_janusImpl->init();
+}
+
+std::shared_ptr<::Janus::Peer> Janus::JanusPeerFactory::create(int64_t c_id, const std::shared_ptr<::Janus::Protocol> & c_owner) {
+	this->c_id = c_id;
+	this->c_owner = c_owner;
+	return NULL;
+}
+void Janus::JanusPeerFactory::onIceCompleted(){
+}
+
+std::string Janus::JanusProxyConf::url(){
+	return "http://139.196.204.25:8088";
+}
+
+std::string Janus::JanusProxyConf::plugin(){
+	return "janus.plugin.echotest";
+}
+
+        //Janus::JanusProxyProtocolDelegate::JanusProxyProtocolDelegate(){}
+void JanusProxyProtocolDelegate::onReady() {
+	callback_->OnReady();
+}
+void JanusProxyProtocolDelegate::setCallback(struct PeerConnectionClientObserver *callback){
+	callback_ = callback;
+}
+
+void JanusProxyProtocolDelegate::onClose() {
+	
+}
+
+void JanusProxyProtocolDelegate::onError(const ::Janus::JanusError & c_error, const std::shared_ptr<::Janus::Bundle> & c_context) {
+	
+}
+
+void JanusProxyProtocolDelegate::onEvent(const std::shared_ptr<::Janus::JanusEvent> & c_event, const std::shared_ptr<::Janus::Bundle> & c_context) {
+	
+}
+
+void JanusProxyProtocolDelegate::onHangup(const std::string & c_reason) {
+	
+}
+
+void PeerConnectionClient::onIceCompleted(){
+	_factory->onIceCompleted();
 }
 
 void PeerConnectionClient::OnResolveResult(
