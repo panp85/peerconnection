@@ -5,7 +5,7 @@
 
 #include <cstdint>
 #include <memory>
-
+#include <janus/protocol.hpp>
 namespace Janus {
 
 class Peer;

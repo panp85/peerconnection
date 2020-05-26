@@ -88,6 +88,7 @@ class PeerConnectionClient : public sigslot::has_slots<>,
                int port);
   
   void onIceCompleted();
+  void onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp);
 
   bool SendToPeer(int peer_id, const std::string& message);
   bool SendHangUp(int peer_id);

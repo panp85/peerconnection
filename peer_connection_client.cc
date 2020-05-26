@@ -122,6 +122,9 @@ void PeerConnectionClient::Connect(const std::string& server,
   }
 }
 
+void PeerConnectionClient::onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp) {
+	_factory->c_owner->onIceCandidate(mid, index, sdp, _factory->c_id);
+}
 
 void PeerConnectionClient::Start(const std::string& server,
                                    int port) {
@@ -142,6 +145,7 @@ std::shared_ptr<::Janus::Peer> Janus::JanusPeerFactory::create(int64_t c_id, con
 	return NULL;
 }
 void Janus::JanusPeerFactory::onIceCompleted(){
+	c_owner->onIceCompleted(this->c_id);
 }
 
 std::string Janus::JanusProxyConf::url(){

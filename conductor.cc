@@ -221,7 +221,7 @@ void Conductor::OnRemoveTrack(
   RTC_LOG(INFO) << __FUNCTION__ << " " << receiver->id();
   main_wnd_->QueueUIThreadCallback(TRACK_REMOVED, receiver->track().release());
 }
-
+/*
 void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
   RTC_LOG(INFO) << __FUNCTION__ << " " << candidate->sdp_mline_index();
   // For loopback test. To save some connecting delay.
@@ -246,6 +246,36 @@ void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
   RTC_LOG(LS_INFO) << "ppt, in Conductor::OnIceCandidate, jmessage: " << jmessage;
   SendMessage(writer.write(jmessage));
 }
+*/
+void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
+  RTC_LOG(INFO) << __FUNCTION__ << " " << candidate->sdp_mline_index();
+  // For loopback test. To save some connecting delay.
+  if (loopback_) {
+    if (!peer_connection_->AddIceCandidate(candidate)) {
+      RTC_LOG(WARNING) << "Failed to apply the received candidate";
+    }
+    return;
+  }
+
+//  Json::StyledWriter writer;
+//  Json::Value jmessage;
+
+//  jmessage[kCandidateSdpMidName] = candidate->sdp_mid();
+//  jmessage[kCandidateSdpMlineIndexName] = candidate->sdp_mline_index();
+  std::string sdp;
+  if (!candidate->ToString(&sdp)) {
+    RTC_LOG(LS_ERROR) << "Failed to serialize candidate";
+    return;
+  }
+//  jmessage[kCandidateSdpName] = sdp;
+//  RTC_LOG(LS_INFO) << "ppt, in Conductor::OnIceCandidate, jmessage: " << jmessage;
+  RTC_LOG(LS_INFO) << "ppt, in Conductor::OnIceCandidate, sdp: " << sdp;
+
+  
+  client_->onIceCandidate(candidate->sdp_mid(), candidate->sdp_mline_index(), sdp);
+  //SendMessage(writer.write(jmessage));
+}
+
 
 
 void Conductor::OnIceGatheringChange(
