@@ -99,8 +99,10 @@ class Conductor : public webrtc::PeerConnectionObserver,
   void OnMessageSent(int err) override;
 
   void OnServerConnectionFailure() override;
-  void OnReady() override;
 
+  //add by pp
+  void OnReady() override;//go to create offer
+  void setRemoteDescription(int c_type, const std::string& c_sdp) override;
   //
   // MainWndCallback implementation.
   //

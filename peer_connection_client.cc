@@ -130,21 +130,25 @@ void PeerConnectionClient::Start(const std::string& server,
                                    int port) {
     //std::shared_ptr<PeerFactory> _peerFactory;
     _conf = std::make_shared<Janus::JanusProxyConf>();
-	_factory = std::make_shared<Janus::JanusPeerFactory>();
+	_factory = std::make_shared<JanusPeerFactory>();
     _platformImpl = std::make_shared<Janus::PlatformImplImpl>(_factory);
 	_delegate = std::make_shared<JanusProxyProtocolDelegate>();
 	_janusImpl = std::make_shared<Janus::JanusImpl>(_conf, _platformImpl, _delegate);
 	
 	_delegate->setCallback(callback_);
+	_factory->setCallback(callback_);
 	_janusImpl->init();
 }
 
-std::shared_ptr<::Janus::Peer> Janus::JanusPeerFactory::create(int64_t c_id, const std::shared_ptr<::Janus::Protocol> & c_owner) {
+std::shared_ptr<::Janus::Peer> JanusPeerFactory::create(int64_t c_id, const std::shared_ptr<::Janus::Protocol> & c_owner) {
 	this->c_id = c_id;
 	this->c_owner = c_owner;
-	return NULL;
+	std::shared_ptr<::Janus::Peer> peer_impl = std::make_shared<PeerImpl>();
+	peer_impl->setCallback(static_cast<void *>(callback_));
+	return peer_impl;
 }
-void Janus::JanusPeerFactory::onIceCompleted(){
+
+void JanusPeerFactory::onIceCompleted(){
 	c_owner->onIceCompleted(this->c_id);
 }
 

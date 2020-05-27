@@ -26,7 +26,8 @@
 
 #include "janus/protocol_delegate.hpp"
 #include "janus/janus_impl.h"
-
+#include "janus/constraints.hpp"
+#include "janus/peer.hpp"
 typedef std::map<int, std::string> Peers;
 
 struct PeerConnectionClientObserver {
@@ -38,7 +39,7 @@ struct PeerConnectionClientObserver {
   virtual void OnMessageSent(int err) = 0;
   virtual void OnServerConnectionFailure() = 0;
   virtual void OnReady() = 0;
-
+  virtual void setRemoteDescription(int c_type, const std::string& c_sdp);
  protected:
   virtual ~PeerConnectionClientObserver() {}
 };
@@ -59,6 +60,48 @@ public:
 	PeerConnectionClientObserver* callback_;
 	void setCallback(PeerConnectionClientObserver* callback);
 };
+
+class JanusPeerFactory : public Janus::PeerFactory
+//	class JavaProxy final : ::djinni::JavaProxyHandle<JavaProxy>, public ::Janus::PeerFactory
+{
+public:
+	JanusPeerFactory(){};
+	~JanusPeerFactory(){};
+
+	std::shared_ptr<::Janus::Peer> create(int64_t id, const std::shared_ptr<::Janus::Protocol> & owner) override;
+	void onIceCompleted();
+	std::shared_ptr<::Janus::Protocol> c_owner;
+	void setCallback(PeerConnectionClientObserver* callback){
+		callback_ = callback;
+	}
+	PeerConnectionClientObserver* callback_;
+	int64_t c_id;
+};
+
+class PeerImpl : public Janus::Peer{
+	
+		void createOffer(const ::Janus::Constraints & c_constraints, const std::shared_ptr<::Janus::Bundle> & c_context) {
+			
+		}
+		void createAnswer(const ::Janus::Constraints & c_constraints, const std::shared_ptr<::Janus::Bundle> & c_context) {
+			
+		}
+		void setLocalDescription(::Janus::SdpType c_type, const std::string & c_sdp) {
+			
+		}
+		void setRemoteDescription(::Janus::SdpType c_type, const std::string & c_sdp) {
+			static_cast<PeerConnectionClientObserver *>(callback_)->setRemoteDescription((int)c_type, c_sdp);
+		}
+		void addIceCandidate(const std::string & c_mid, int32_t c_index, const std::string & c_sdp) {
+		}
+		void close() {
+			
+		}
+
+		void setCallback(void* callback){
+			callback_ = callback;
+		}
+	};
 
 class PeerConnectionClient : public sigslot::has_slots<>,
                              public rtc::MessageHandler {
@@ -160,10 +203,13 @@ class PeerConnectionClient : public sigslot::has_slots<>,
   
 public:
 	std::shared_ptr<Janus::JanusConf> _conf;
-	std::shared_ptr<Janus::JanusPeerFactory> _factory;
+	std::shared_ptr<JanusPeerFactory> _factory;
 	std::shared_ptr<Janus::PlatformImplImpl> _platformImpl;
 	std::shared_ptr<JanusProxyProtocolDelegate> _delegate;
 	std::shared_ptr<Janus::Janus> _janusImpl;
+	void setRemoteDescription(int c_type, const std::string & c_sdp){
+		callback_->setRemoteDescription(c_type, c_sdp);
+	}
 };
 
 

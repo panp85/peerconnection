@@ -451,6 +451,10 @@ void Conductor::start(const std::string& server, int port){
 	client_->Start(server,port);
 }
 
+void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//SetRemoteDescription
+}
+
+
 void Conductor::DisconnectFromServer() {
   if (client_->is_connected())
     client_->SignOut();

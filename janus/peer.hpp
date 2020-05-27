@@ -28,6 +28,12 @@ public:
     virtual void addIceCandidate(const std::string & mid, int32_t index, const std::string & sdp) = 0;
 
     virtual void close() = 0;
+
+	void* callback_;
+	
+	virtual void setCallback(void* callback);
 };
+	
+
 
 }  // namespace Janus
