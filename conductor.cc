@@ -452,6 +452,91 @@ void Conductor::start(const std::string& server, int port){
 }
 
 void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//SetRemoteDescription
+	//RTC_DCHECK(peer_id_ == peer_id || peer_id_ == -1);
+	  RTC_DCHECK(!c_sdp.empty());
+	
+	  if (!peer_connection_.get()) {
+		RTC_DCHECK(peer_id_ == -1);
+		peer_id_ = 111111;
+	
+		if (!InitializePeerConnection()) {
+		  RTC_LOG(LS_ERROR) << "Failed to initialize our PeerConnection instance";
+		  client_->SignOut();
+		  return;
+		}
+	  } /*else if (peer_id != peer_id_) {
+		RTC_DCHECK(peer_id_ != -1);
+		RTC_LOG(WARNING)
+			<< "Received a message from unknown peer while already in a "
+			   "conversation with a different peer.";
+		return;
+	  }
+	*/
+	/*
+	  Json::Reader reader;
+	  Json::Value jmessage;
+	  RTC_LOG(LS_INFO) << "ppt, message: " << message;
+	  if (!reader.parse(message, jmessage)) {
+		RTC_LOG(WARNING) << "Received unknown message. " << message;
+		return;
+	  }
+	  std::string type_str;
+	  std::string json_object;
+	  
+	  rtc::GetStringFromJsonObject(jmessage, kSessionDescriptionTypeName,
+								   &type_str);
+		if (!type_str.empty()) {
+		if (type_str == "offer-loopback") {
+		  // This is a loopback call.
+		  // Recreate the peerconnection with DTLS disabled.
+		  if (!ReinitializePeerConnectionForLoopback()) {
+			RTC_LOG(LS_ERROR) << "Failed to initialize our PeerConnection instance";
+			DeletePeerConnection();
+			client_->SignOut();
+		  }
+		  return;
+		}
+		*/
+		/*
+		absl::optional<webrtc::SdpType> type_maybe =
+			webrtc::SdpTypeFromString(type_str);
+		if (!type_maybe) {
+		  RTC_LOG(LS_ERROR) << "Unknown SDP type: " << type_str;
+		  return;
+		}
+		*/
+		webrtc::SdpType type;// = *type_maybe;
+		if(c_type == 0){
+			type = webrtc::SdpType::kOffer;
+		}
+		else if(c_type == 1){
+			type = webrtc::SdpType::kAnswer;
+		}
+		//webrtc::SdpType type = *type_maybe;
+		/*
+		std::string sdp;
+		if (!rtc::GetStringFromJsonObject(jmessage, kSessionDescriptionSdpName,
+										  &sdp)) {
+		  RTC_LOG(WARNING) << "Can't parse received session description message.";
+		  return;
+		}
+		*/
+		webrtc::SdpParseError error;
+		std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
+			webrtc::CreateSessionDescription(type, c_sdp, &error);
+		if (!session_description) {
+		  RTC_LOG(WARNING) << "Can't parse received session description message. "
+						   << "SdpParseError was: " << error.description;
+		  return;
+		}
+		RTC_LOG(INFO) << " Received session description :" << c_sdp;
+		peer_connection_->SetRemoteDescription(
+			DummySetSessionDescriptionObserver::Create(),
+			session_description.release());
+		if (type == webrtc::SdpType::kOffer) {
+		  peer_connection_->CreateAnswer(
+			  this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+		}
 }
 
 
