@@ -538,7 +538,11 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 			  this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 		}
 }
+void Conductor::createOffer(){
+	peer_connection_->CreateOffer(
+		this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 
+}
 
 void Conductor::DisconnectFromServer() {
   if (client_->is_connected())
@@ -573,8 +577,10 @@ void Conductor::OnReady() {
 
   if (InitializePeerConnection()) {
     peer_id_ = 11111;
-    peer_connection_->CreateOffer(
-        this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+	std::string cmd = std::string("13Q3wnLuN7");
+	client_->dispatch(cmd);
+    //peer_connection_->CreateOffer(
+    //    this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
   } else {
     main_wnd_->MessageBox("Error", "Failed to initialize PeerConnection", true);
   }
@@ -716,7 +722,9 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
   jmessage[kSessionDescriptionTypeName] =
       webrtc::SdpTypeToString(desc->GetType());
   jmessage[kSessionDescriptionSdpName] = sdp;
-  SendMessage(writer.write(jmessage));
+  //SendMessage(writer.write(jmessage));
+
+  client_->onOffer(sdp);
 }
 
 void Conductor::OnFailure(webrtc::RTCError error) {

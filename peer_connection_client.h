@@ -28,6 +28,8 @@
 #include "janus/janus_impl.h"
 #include "janus/constraints.hpp"
 #include "janus/peer.hpp"
+#include "janus/bundle_impl.h"
+
 typedef std::map<int, std::string> Peers;
 
 struct PeerConnectionClientObserver {
@@ -40,6 +42,7 @@ struct PeerConnectionClientObserver {
   virtual void OnServerConnectionFailure() = 0;
   virtual void OnReady() = 0;
   virtual void setRemoteDescription(int c_type, const std::string& c_sdp);
+  virtual void createOffer();
  protected:
   virtual ~PeerConnectionClientObserver() {}
 };
@@ -81,7 +84,7 @@ public:
 class PeerImpl : public Janus::Peer{
 	
 		void createOffer(const ::Janus::Constraints & c_constraints, const std::shared_ptr<::Janus::Bundle> & c_context) {
-			
+			static_cast<PeerConnectionClientObserver *>(callback_)->createOffer(/*c_constraints, c_context*/);
 		}
 		void createAnswer(const ::Janus::Constraints & c_constraints, const std::shared_ptr<::Janus::Bundle> & c_context) {
 			
@@ -207,8 +210,19 @@ public:
 	std::shared_ptr<Janus::PlatformImplImpl> _platformImpl;
 	std::shared_ptr<JanusProxyProtocolDelegate> _delegate;
 	std::shared_ptr<Janus::Janus> _janusImpl;
+
+	std::shared_ptr<Janus::BundleImpl> _bundle;
 	void setRemoteDescription(int c_type, const std::string & c_sdp){
 		callback_->setRemoteDescription(c_type, c_sdp);
+	}
+	void dispatch(std::string& cmd){
+		_janusImpl->dispatch(cmd, _bundle);
+	}
+	void createOffer(const ::Janus::Constraints & c_constraints, const std::shared_ptr<::Janus::Bundle> & c_context){
+		callback_->createOffer();
+	}
+	void onOffer(std::string& sdp){
+		_platformImpl->protocol()->onOffer(sdp, _bundle);
 	}
 };
 

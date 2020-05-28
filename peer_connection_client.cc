@@ -138,6 +138,8 @@ void PeerConnectionClient::Start(const std::string& server,
 	_delegate->setCallback(callback_);
 	_factory->setCallback(callback_);
 	_janusImpl->init();
+
+	_bundle = std::make_shared<Janus::BundleImpl>();
 }
 
 std::shared_ptr<::Janus::Peer> JanusPeerFactory::create(int64_t c_id, const std::shared_ptr<::Janus::Protocol> & c_owner) {
@@ -160,10 +162,11 @@ std::string Janus::JanusProxyConf::plugin(){
 	return "janus.plugin.echotest";
 }
 
-        //Janus::JanusProxyProtocolDelegate::JanusProxyProtocolDelegate(){}
+//Janus::JanusProxyProtocolDelegate::JanusProxyProtocolDelegate(){}
 void JanusProxyProtocolDelegate::onReady() {
 	callback_->OnReady();
 }
+
 void JanusProxyProtocolDelegate::setCallback(struct PeerConnectionClientObserver *callback){
 	callback_ = callback;
 }
