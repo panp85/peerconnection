@@ -15,6 +15,10 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <iostream>
+#include <thread>
+#include <unistd.h>
+
 
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
@@ -70,9 +74,9 @@ class DummySetSessionDescriptionObserver
 class CapturerTrackSource : public webrtc::VideoTrackSource {
  public:
   static rtc::scoped_refptr<CapturerTrackSource> Create() {
-    const size_t kWidth = 640;
-    const size_t kHeight = 480;
-    const size_t kFps = 30;
+    const size_t kWidth = 320;
+    const size_t kHeight = 240;
+    const size_t kFps = 10;
     std::unique_ptr<webrtc::test::VcmCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -314,6 +318,7 @@ void Conductor::OnPeerConnected(int id, const std::string& name) {
 
 void Conductor::OnPeerDisconnected(int id) {
   RTC_LOG(INFO) << __FUNCTION__;
+  std::cout<< "Our peer disconnected.\n";
   if (id == peer_id_) {
     RTC_LOG(INFO) << "Our peer disconnected";
     main_wnd_->QueueUIThreadCallback(PEER_CONNECTION_CLOSED, NULL);
@@ -446,9 +451,20 @@ void Conductor::StartLogin(const std::string& server, int port) {
   client_->Connect(server, port, GetPeerName());
 }
 
-void Conductor::start(const std::string& server, int port){
-	server_ = server;
-	client_->Start(server,port);
+void* Conductor::janus_fun(void *callback){
+	std::cout<<"janus_fun.\n";
+	((PeerConnectionClient*)callback)->Start();
+	std::cout<<"janus_fun over.\n";
+	while(1){
+		std::cout<<"while Conductor::janus_fun.\n";
+		sleep(1000);
+	}
+}
+
+void Conductor::start(){
+	//std::thread thread1(janus_fun, std::ref(client_));
+	//pthread_create(&hHandle, NULL, janus_fun, (void *)client_);	   //create a thread;
+	client_->Start();
 }
 
 void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//SetRemoteDescription
@@ -539,9 +555,9 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		}
 }
 void Conductor::createOffer(){
+	RTC_LOG(INFO) << "ppt, go to createOffer.";
 	peer_connection_->CreateOffer(
 		this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
-
 }
 
 void Conductor::DisconnectFromServer() {
@@ -568,17 +584,21 @@ void Conductor::ConnectToPeer(int peer_id) {
   }
 }
 
-void Conductor::OnReady() {
+void Conductor::OnReady1() {
   if (peer_connection_.get()) {
     main_wnd_->MessageBox(
         "Error", "We only support connecting to one peer at a time", true);
     return;
   }
-
+  RTC_LOG(LS_ERROR) << "ppt, Conductor::OnReady.";
+  std::cout << "ppt, Conductor::OnReady." << std::endl;
+  //while(1){}
   if (InitializePeerConnection()) {
     peer_id_ = 11111;
 	std::string cmd = std::string("13Q3wnLuN7");
+    std::cout << "client_->dispatch call" << std::endl;
 	client_->dispatch(cmd);
+	
     //peer_connection_->CreateOffer(
     //    this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
   } else {
@@ -587,10 +607,16 @@ void Conductor::OnReady() {
 }
 
 
+void Conductor::OnReady() {
+  main_wnd_->QueueUIThreadCallback(10, NULL);
+}
+
+
 void Conductor::AddTracks() {
   if (!peer_connection_->GetSenders().empty()) {
     return;  // Already added tracks.
   }
+  RTC_LOG(LS_ERROR) << "ppt, AddTracks.";
 
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
       peer_connection_factory_->CreateAudioTrack(
@@ -617,8 +643,8 @@ void Conductor::AddTracks() {
   } else {
     RTC_LOG(LS_ERROR) << "OpenVideoCaptureDevice failed";
   }
-
-  main_wnd_->SwitchToStreamingUI();
+  std::cout << "go to SwitchToStreamingUI" << std::endl;
+  main_wnd_->SwitchToStreamingUI1();
 }
 
 void Conductor::DisconnectFromCurrentPeer() {
@@ -677,6 +703,7 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
     }
 
     case NEW_TRACK_ADDED: {
+		std::cout << "NEW_TRACK_ADDED" << std::endl;
       auto* track = reinterpret_cast<webrtc::MediaStreamTrackInterface*>(data);
       if (track->kind() == webrtc::MediaStreamTrackInterface::kVideoKind) {
         auto* video_track = static_cast<webrtc::VideoTrackInterface*>(track);
@@ -692,7 +719,11 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
       track->Release();
       break;
     }
-
+	case 10:{
+		OnReady1();
+		//main_wnd_->SwitchToStreamingUI1();
+		break;
+	}
     default:
       RTC_NOTREACHED();
       break;
@@ -700,6 +731,7 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
 }
 
 void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
+  RTC_LOG(LS_ERROR) << "Conductor::OnSuccess";
   peer_connection_->SetLocalDescription(
       DummySetSessionDescriptionObserver::Create(), desc);
 
@@ -714,6 +746,7 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
     peer_connection_->SetRemoteDescription(
         DummySetSessionDescriptionObserver::Create(),
         session_description.release());
+	
     return;
   }
 
@@ -723,7 +756,6 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
       webrtc::SdpTypeToString(desc->GetType());
   jmessage[kSessionDescriptionSdpName] = sdp;
   //SendMessage(writer.write(jmessage));
-
   client_->onOffer(sdp);
 }
 

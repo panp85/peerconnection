@@ -31,7 +31,7 @@ public:
 
 	void* callback_;
 	
-	virtual void setCallback(void* callback);
+	virtual void setCallback(void* callback) = 0;
 };
 	
 

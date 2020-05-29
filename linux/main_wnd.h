@@ -14,6 +14,7 @@
 #include <stdint.h>
 #include <memory>
 #include <string>
+#include<pthread.h>
 
 #include "api/media_stream_interface.h"
 #include "api/scoped_refptr.h"
@@ -52,6 +53,7 @@ class GtkMainWnd : public MainWindow {
   virtual void StopRemoteRenderer();
 
   virtual void QueueUIThreadCallback(int msg_id, void* data);
+  virtual void SwitchToStreamingUI1();
 
   // Creates and shows the main window with the |Connect UI| enabled.
   bool Create();
@@ -122,6 +124,10 @@ class GtkMainWnd : public MainWindow {
   int height_;
   std::unique_ptr<uint8_t[]> draw_buffer_;
   int draw_buffer_size_;
+
+  int flag =0;
+
+
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_LINUX_MAIN_WND_H_

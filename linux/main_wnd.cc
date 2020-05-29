@@ -1,4 +1,4 @@
-/*
+#include<pthread.h>/*
  *  Copyright 2012 The WebRTC Project Authors. All rights reserved.
  *
  *  Use of this source code is governed by a BSD-style license
@@ -24,7 +24,7 @@
 #include <cstdint>
 #include <map>
 #include <utility>
-
+#include <iostream>
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame_buffer.h"
 #include "api/video/video_rotation.h"
@@ -32,6 +32,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "third_party/libyuv/include/libyuv/convert_from.h"
+
 
 namespace {
 
@@ -199,6 +200,7 @@ MainWindow::UI GtkMainWnd::current_ui() {
 }
 
 void GtkMainWnd::StartLocalRenderer(webrtc::VideoTrackInterface* local_video) {
+  std::cout << "StartLocalRenderer.\n";
   local_renderer_.reset(new VideoRenderer(this, local_video));
 }
 
@@ -208,6 +210,7 @@ void GtkMainWnd::StopLocalRenderer() {
 
 void GtkMainWnd::StartRemoteRenderer(
     webrtc::VideoTrackInterface* remote_video) {
+     std::cout << "StartRemoteRenderer.\n";
   remote_renderer_.reset(new VideoRenderer(this, remote_video));
 }
 
@@ -240,6 +243,8 @@ bool GtkMainWnd::Create() {
 }
 
 bool GtkMainWnd::Destroy() {
+  std::cout << "ppt, GtkMainWnd::Destroy " << std::endl;
+
   if (!IsWindow())
     return false;
 
@@ -342,25 +347,48 @@ void GtkMainWnd::SwitchToPeerList(const Peers& peers) {
     g_idle_add(SimulateLastRowActivated, peer_list_);
 }
 
-void GtkMainWnd::SwitchToStreamingUI() {
+void GtkMainWnd::SwitchToStreamingUI1() {
   RTC_LOG(INFO) << __FUNCTION__;
 
   RTC_DCHECK(draw_area_ == NULL);
-
+  std::cout << "ppt, SwitchToStreamingUI 1 " << std::endl;
+//  gdk_threads_enter();
+   std::cout << "ppt, SwitchToStreamingUI 2 " << std::endl;
+  //if(flag == 0){
+    if (vbox_) {
+        gtk_widget_destroy(vbox_);
+        vbox_ = NULL;
+        server_edit_ = NULL;
+        port_edit_ = NULL;
+      } 
+	  if (draw_area_) {
+        gtk_widget_destroy(draw_area_);
+        draw_area_ = NULL;
+        draw_buffer_.reset();
+      }
+  	//flag =1;
+  //}
   gtk_container_set_border_width(GTK_CONTAINER(window_), 0);
   if (peer_list_) {
     gtk_widget_destroy(peer_list_);
     peer_list_ = NULL;
   }
-
   draw_area_ = gtk_drawing_area_new();
   gtk_container_add(GTK_CONTAINER(window_), draw_area_);
+ 
   g_signal_connect(G_OBJECT(draw_area_), "draw", G_CALLBACK(&::Draw), this);
 
   gtk_widget_show_all(window_);
+  std::cout << "ppt, SwitchToStreamingUI 4 " << std::endl;
+}
+
+
+void GtkMainWnd::SwitchToStreamingUI() {
+  QueueUIThreadCallback(10, NULL);
 }
 
 void GtkMainWnd::OnDestroyed(GtkWidget* widget, GdkEvent* event) {
+	std::cout << "ppt, OnDestroyed " << std::endl;
   callback_->Close();
   window_ = NULL;
   draw_area_ = NULL;
@@ -370,6 +398,7 @@ void GtkMainWnd::OnDestroyed(GtkWidget* widget, GdkEvent* event) {
   peer_list_ = NULL;
 }
 
+
 void GtkMainWnd::OnClicked(GtkWidget* widget) {
   // Make the connect button insensitive, so that it cannot be clicked more than
   // once.  Now that the connection includes auto-retry, it should not be
@@ -378,8 +407,8 @@ void GtkMainWnd::OnClicked(GtkWidget* widget) {
   server_ = gtk_entry_get_text(GTK_ENTRY(server_edit_));
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
-  //callback_->StartLogin(server_, port);
-  callback_->start(server_, port);
+  //callback_->StartLogin(server_, port); 
+  callback_->start();
 }
 
 void GtkMainWnd::OnKeyPress(GtkWidget* widget, GdkEventKey* key) {
@@ -437,11 +466,13 @@ void GtkMainWnd::OnRowActivated(GtkTreeView* tree_view,
 }
 
 void GtkMainWnd::OnRedraw() {
+  
   gdk_threads_enter();
-
+  std::cout << "GtkMainWnd::OnRedraw" << std::endl;
   VideoRenderer* remote_renderer = remote_renderer_.get();
   if (remote_renderer && remote_renderer->image() != NULL &&
       draw_area_ != NULL) {
+      
     width_ = remote_renderer->width();
     height_ = remote_renderer->height();
 
@@ -469,7 +500,7 @@ void GtkMainWnd::OnRedraw() {
     }
 
     VideoRenderer* local_renderer = local_renderer_.get();
-    if (local_renderer && local_renderer->image()) {
+    if (0/*local_renderer && local_renderer->image()*/) {
       image = reinterpret_cast<const uint32_t*>(local_renderer->image());
       scaled = reinterpret_cast<uint32_t*>(draw_buffer_.get());
       // Position the local preview on the right side.
@@ -503,6 +534,8 @@ void GtkMainWnd::OnRedraw() {
 }
 
 void GtkMainWnd::Draw(GtkWidget* widget, cairo_t* cr) {
+  std::cout << "GtkMainWnd::Draw" << std::endl;
+
 #if GTK_MAJOR_VERSION != 2
   cairo_format_t format = CAIRO_FORMAT_RGB24;
   cairo_surface_t* surface = cairo_image_surface_create_for_data(
@@ -546,7 +579,7 @@ void GtkMainWnd::VideoRenderer::SetSize(int width, int height) {
 
 void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
   gdk_threads_enter();
-
+  //std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
   rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
       video_frame.video_frame_buffer()->ToI420());
   if (video_frame.rotation() != webrtc::kVideoRotation_0) {
@@ -566,6 +599,6 @@ void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
                      buffer->height());
 
   gdk_threads_leave();
-
+  //std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
   g_idle_add(Redraw, main_wnd_);
 }

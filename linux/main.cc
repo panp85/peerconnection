@@ -46,8 +46,9 @@ class CustomSocketServer : public rtc::PhysicalSocketServer {
     // different thread.  Alternatively we could look at merging the two loops
     // by implementing a dispatcher for the socket server and/or use
     // g_main_context_set_poll_func.
-    while (gtk_events_pending())
+    while (gtk_events_pending()){
       gtk_main_iteration();
+    }
 
     if (!wnd_->IsWindow() && !conductor_->connection_active() &&
         client_ != NULL && !client_->is_connected()) {

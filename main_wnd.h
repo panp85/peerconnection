@@ -32,8 +32,7 @@ class MainWndCallback {
   virtual void DisconnectFromCurrentPeer() = 0;
   virtual void UIThreadCallback(int msg_id, void* data) = 0;
   virtual void Close() = 0;
-  virtual void start(const std::string& server,
-				int port);
+  virtual void start() = 0;
 
  protected:
   virtual ~MainWndCallback() {}
@@ -70,6 +69,8 @@ class MainWindow {
   virtual void StopRemoteRenderer() = 0;
 
   virtual void QueueUIThreadCallback(int msg_id, void* data) = 0;
+  
+  virtual void SwitchToStreamingUI1() = 0;
 };
 
 #ifdef WIN32

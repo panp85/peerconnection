@@ -89,6 +89,7 @@ namespace Janus {
 
     auto bundle = Bundle::create();
     bundle->setString("plugin", conf->plugin());
+	std::cout << "JanusApi::init:JanusCommands::CREATE" << std::endl;
     this->dispatch(JanusCommands::CREATE, bundle);
   }
 
@@ -194,6 +195,7 @@ namespace Janus {
       this->_plugin = this->_platform->plugin(pluginId, this->_handleId, this->shared_from_this());
 
       this->readyState(ReadyState::READY);
+	  std::cout << "ppt, go to onReady janusApi" << std::endl;
       this->_delegate->onReady();
 
       return;

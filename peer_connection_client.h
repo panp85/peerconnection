@@ -41,8 +41,8 @@ struct PeerConnectionClientObserver {
   virtual void OnMessageSent(int err) = 0;
   virtual void OnServerConnectionFailure() = 0;
   virtual void OnReady() = 0;
-  virtual void setRemoteDescription(int c_type, const std::string& c_sdp);
-  virtual void createOffer();
+  virtual void setRemoteDescription(int c_type, const std::string& c_sdp) = 0;
+  virtual void createOffer() = 0;
  protected:
   virtual ~PeerConnectionClientObserver() {}
 };
@@ -130,8 +130,7 @@ class PeerConnectionClient : public sigslot::has_slots<>,
   void Connect(const std::string& server,
                int port,
                const std::string& client_name);
-  void Start(const std::string& server,
-               int port);
+  void Start();
   
   void onIceCompleted();
   void onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp);
@@ -212,6 +211,7 @@ public:
 	std::shared_ptr<Janus::Janus> _janusImpl;
 
 	std::shared_ptr<Janus::BundleImpl> _bundle;
+	
 	void setRemoteDescription(int c_type, const std::string & c_sdp){
 		callback_->setRemoteDescription(c_type, c_sdp);
 	}

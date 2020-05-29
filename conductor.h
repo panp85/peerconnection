@@ -48,8 +48,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool connection_active() const;
 
   void Close() override;
- 	void start(const std::string& server,
-				 int port) override;
+ 	void start() override;
 
  protected:
   ~Conductor();
@@ -135,6 +134,11 @@ class Conductor : public webrtc::PeerConnectionObserver,
   MainWindow* main_wnd_;
   std::deque<std::string*> pending_messages_;
   std::string server_;
+
+  
+  pthread_t hHandle;
+  static void* janus_fun(void *callback);
+  void OnReady1();
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_
