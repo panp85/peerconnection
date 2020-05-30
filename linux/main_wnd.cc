@@ -472,7 +472,7 @@ void GtkMainWnd::OnRedraw() {
   std::cout << "GtkMainWnd::OnRedraw" << std::endl;
   VideoRenderer* remote_renderer = remote_renderer_.get();
   if (remote_renderer && remote_renderer->image() != NULL &&
-      draw_area_ != NULL) {
+      draw_area_ != NULL/* && (flag++%2==0)*/) {
       
     width_ = remote_renderer->width();
     height_ = remote_renderer->height();
@@ -579,10 +579,12 @@ void GtkMainWnd::VideoRenderer::SetSize(int width, int height) {
 }
 
 void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
+
   gdk_threads_enter();
   //std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
   rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
       video_frame.video_frame_buffer()->ToI420());
+  //if((main_wnd_->flag++)%2 == 1){gdk_threads_leave();return;}
   if (video_frame.rotation() != webrtc::kVideoRotation_0) {
     buffer = webrtc::I420Buffer::Rotate(*buffer, video_frame.rotation());
   }
@@ -594,12 +596,19 @@ void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
   // This was supposed to be a call to libyuv::I420ToRGBA but it was resulting
   // in a reddish video output (see https://bugs.webrtc.org/6857) because it
   // was producing an unexpected byte order (ABGR, byte swapped).
+  
   libyuv::I420ToABGR(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
                      buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
                      image_.get(), width_ * 4, buffer->width(),
                      buffer->height());
-
+/*
+	 libyuv::I420ToRGBA(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
+	 buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
+	 image_.get(), width_ * 4, buffer->width(),
+	 buffer->height());
+*/
   gdk_threads_leave();
   //std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
+  
   g_idle_add(Redraw, main_wnd_);
 }

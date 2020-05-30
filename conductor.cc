@@ -153,10 +153,18 @@ bool Conductor::InitializePeerConnection() {
     main_wnd_->MessageBox("Error", "CreatePeerConnection failed", true);
     DeletePeerConnection();
   }
-
+ 
   AddTracks();
 
   return peer_connection_ != nullptr;
+}
+
+void setbitrate(){
+  webrtc::PeerConnectionInterface::BitrateParameters bitrate;
+  bitrate.min_bitrate_bps = 100;
+  bitrate.current_bitrate_bps = 300;
+  bitrate.max_bitrate_bps = 300;
+  peer_connection_->SetBitrate(bitrate);
 }
 
 bool Conductor::ReinitializePeerConnectionForLoopback() {
@@ -737,7 +745,7 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
 
   std::string sdp;
   desc->ToString(&sdp);
-
+	RTC_LOG(LS_ERROR) << "sdp: " << sdp;
   // For loopback test. To save some connecting delay.
   if (loopback_) {
     // Replace message type from "offer" to "answer"

@@ -139,6 +139,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   pthread_t hHandle;
   static void* janus_fun(void *callback);
   void OnReady1();
+  void setbitrate();
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_
