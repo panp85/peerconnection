@@ -233,6 +233,7 @@ bool GtkMainWnd::Create() {
     gtk_window_set_title(GTK_WINDOW(window_), "PeerConnection client");
     g_signal_connect(G_OBJECT(window_), "delete-event",
                      G_CALLBACK(&OnDestroyedCallback), this);
+	
     g_signal_connect(window_, "key-press-event", G_CALLBACK(OnKeyPressCallback),
                      this);
 
@@ -500,7 +501,7 @@ void GtkMainWnd::OnRedraw() {
     }
 
     VideoRenderer* local_renderer = local_renderer_.get();
-    if (0/*local_renderer && local_renderer->image()*/) {
+    if (local_renderer && local_renderer->image()) {
       image = reinterpret_cast<const uint32_t*>(local_renderer->image());
       scaled = reinterpret_cast<uint32_t*>(draw_buffer_.get());
       // Position the local preview on the right side.

@@ -11,7 +11,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <stdio.h>
-
+#include <iostream>
 #include "api/scoped_refptr.h"
 #include "examples/peerconnection/client/conductor.h"
 #include "examples/peerconnection/client/flag_defs.h"
@@ -49,7 +49,7 @@ class CustomSocketServer : public rtc::PhysicalSocketServer {
     while (gtk_events_pending()){
       gtk_main_iteration();
     }
-
+	usleep(10*1000);
     if (!wnd_->IsWindow() && !conductor_->connection_active() &&
         client_ != NULL && !client_->is_connected()) {
       message_queue_->Quit();
@@ -109,6 +109,7 @@ int main(int argc, char* argv[]) {
       new rtc::RefCountedObject<Conductor>(&client, &wnd));
   socket_server.set_client(&client);
   socket_server.set_conductor(conductor);
+  //while(1){sleep(1);}
 
   thread.Run();
 
