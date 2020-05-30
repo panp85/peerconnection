@@ -159,7 +159,7 @@ bool Conductor::InitializePeerConnection() {
   return peer_connection_ != nullptr;
 }
 
-void setbitrate(){
+void Conductor::setbitrate(){
   webrtc::PeerConnectionInterface::BitrateParameters bitrate;
   bitrate.min_bitrate_bps = 100;
   bitrate.current_bitrate_bps = 300;
@@ -475,6 +475,16 @@ void Conductor::start(){
 	client_->Start();
 }
 
+void Conductor::replace_all_distinct(std::string&           str, const std::string& old_value,const std::string& new_value)     
+{     
+    for(std::string::size_type   pos(0);   pos!=std::string::npos;   pos+=new_value.length())   {     
+        if(   (pos=str.find(old_value,pos))!=std::string::npos   )     
+            str.replace(pos,old_value.length(),new_value);     
+        else   break;     
+    }     
+    //return str;     
+}     
+
 void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//SetRemoteDescription
 	//RTC_DCHECK(peer_id_ == peer_id || peer_id_ == -1);
 	  RTC_DCHECK(!c_sdp.empty());
@@ -546,14 +556,20 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		}
 		*/
 		webrtc::SdpParseError error;
+		
+		//c_sdp.replace("c=IN IP4 139.196.204.25\r\n", "c=IN IP4 139.196.204.25\r\nb=AS:100\r\n");
+		std::string s = c_sdp;
+		
+		replace_all_distinct(s, std::string("c=IN IP4 139.196.204.25\r\n"), std::string("c=IN IP4 139.196.204.25\r\nb=AS:100\r\n"));
+		RTC_LOG(INFO) << " Received session description :" << s;
 		std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
-			webrtc::CreateSessionDescription(type, c_sdp, &error);
+			webrtc::CreateSessionDescription(type, s, &error);
 		if (!session_description) {
 		  RTC_LOG(WARNING) << "Can't parse received session description message. "
 						   << "SdpParseError was: " << error.description;
 		  return;
 		}
-		RTC_LOG(INFO) << " Received session description :" << c_sdp;
+		
 		peer_connection_->SetRemoteDescription(
 			DummySetSessionDescriptionObserver::Create(),
 			session_description.release());

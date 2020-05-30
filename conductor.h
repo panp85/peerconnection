@@ -140,6 +140,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   static void* janus_fun(void *callback);
   void OnReady1();
   void setbitrate();
+  void replace_all_distinct(std::string& str, const std::string& old_value,const std::string& new_value);
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_
