@@ -597,12 +597,13 @@ void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
   // in a reddish video output (see https://bugs.webrtc.org/6857) because it
   // was producing an unexpected byte order (ABGR, byte swapped).
   
-  libyuv::I420ToABGR(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
-                     buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
+  libyuv::I420ToABGR(buffer->DataY(), buffer->StrideY(), 
+  					buffer->DataV(),buffer->StrideV(), 
+  					buffer->DataU(), buffer->StrideU(),
                      image_.get(), width_ * 4, buffer->width(),
                      buffer->height());
 /*
-	 libyuv::I420ToRGBA(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
+  libyuv::I420ToRGBA(buffer->DataY(), buffer->StrideY(), buffer->DataU(),
 	 buffer->StrideU(), buffer->DataV(), buffer->StrideV(),
 	 image_.get(), width_ * 4, buffer->width(),
 	 buffer->height());

@@ -18,6 +18,7 @@
 #include <iostream>
 #include <thread>
 #include <unistd.h>
+#include <sstream>
 
 
 #include "absl/memory/memory.h"
@@ -76,7 +77,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
   static rtc::scoped_refptr<CapturerTrackSource> Create() {
     const size_t kWidth = 320;
     const size_t kHeight = 240;
-    const size_t kFps = 10;
+    const size_t kFps = 15;
     std::unique_ptr<webrtc::test::VcmCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
         webrtc::VideoCaptureFactory::CreateDeviceInfo());
@@ -558,9 +559,8 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		webrtc::SdpParseError error;
 		
 		//c_sdp.replace("c=IN IP4 139.196.204.25\r\n", "c=IN IP4 139.196.204.25\r\nb=AS:100\r\n");
-		std::string s = c_sdp;
+		std::string s = sdp_rate_set(-1, c_sdp);
 		
-		replace_all_distinct(s, std::string("c=IN IP4 139.196.204.25\r\n"), std::string("c=IN IP4 139.196.204.25\r\nb=AS:100\r\n"));
 		RTC_LOG(INFO) << " Received session description :" << s;
 		std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
 			webrtc::CreateSessionDescription(type, s, &error);
@@ -577,6 +577,20 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		  peer_connection_->CreateAnswer(
 			  this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 		}
+}
+std::string Conductor::sdp_rate_set(int rate, const std::string &sdp)
+{
+	if(rate == -1){
+		return sdp;
+	}
+	std::string s; 
+	std::stringstream ss;
+	ss<<"c=IN IP4 139.196.204.25\r\nb=AS:"<<rate<<"\r\n";
+	std::string strtEST = ss.str();
+	//s = str( boost::format("c=IN IP4 139.196.204.25\r\nb=AS:%d\r\n") % rate ); 
+	//sprintf(sc, "c=IN IP4 139.196.204.25\r\nb=AS:%s\r\n", rate)
+	replace_all_distinct(s, std::string("c=IN IP4 139.196.204.25\r\n"), strtEST);
+	return s;
 }
 void Conductor::createOffer(){
 	RTC_LOG(INFO) << "ppt, go to createOffer.";
