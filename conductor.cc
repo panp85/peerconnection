@@ -794,7 +794,11 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
       webrtc::SdpTypeToString(desc->GetType());
   jmessage[kSessionDescriptionSdpName] = sdp;
   //SendMessage(writer.write(jmessage));
-  client_->onOffer(sdp);
+  if(webrtc::SdpTypeToString(desc->GetType()).equals("offer")){
+  	client_->onOffer(sdp);
+  }else{
+  	client_->onAnswer(sdp);
+  }
 }
 
 void Conductor::OnFailure(webrtc::RTCError error) {

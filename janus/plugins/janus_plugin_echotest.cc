@@ -21,6 +21,12 @@ namespace Janus {
 
       return base;
     }
+	nlohmann::json answer(const std::string& sdp, bool audio, bool video) {
+      auto base = update(audio, video);
+      base["jsep"] = { { "type", "answer" }, { "sdp", sdp } };
+
+      return base;
+    }
 
   }
 
@@ -62,6 +68,13 @@ namespace Janus {
     this->_peer->setLocalDescription(SdpType::OFFER, sdp);
 
     auto msg = Messages::call(sdp, context->getBool("audio", true), context->getBool("video", true));
+    this->_delegate->onCommandResult(msg, context);
+  }
+
+   void JanusPluginEchotest::onAnswer(const std::string& sdp, const std::shared_ptr<Bundle>& context) {
+    this->_peer->setLocalDescription(SdpType::ANSWER, sdp);
+
+    auto msg = Messages::answer(sdp, context->getBool("audio", true), context->getBool("video", true));
     this->_delegate->onCommandResult(msg, context);
   }
 

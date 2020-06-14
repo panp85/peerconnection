@@ -10,7 +10,9 @@ namespace Janus {
   /* Janus API message Factories */
   
   namespace Messages {
-
+	std::string p2p = "no";
+	std::string root_id = "";
+	
     nlohmann::json create(const std::string& transaction) {
       return {
         { "janus", JanusCommands::CREATE },
@@ -20,6 +22,8 @@ namespace Janus {
 
     nlohmann::json attach(const std::string& transaction, const std::string& plugin) {
       return {
+      	{ "p2p", p2p.c_str()},
+      	{ "room", root_id.c_str()},
         { "janus", JanusCommands::ATTACH },
         { "plugin", plugin },
         { "transaction", transaction }
@@ -28,6 +32,7 @@ namespace Janus {
 
     nlohmann::json destroy(const std::string& transaction) {
       return {
+	  	{ "p2p", p2p.c_str()},
         { "janus", JanusCommands::DESTROY },
         { "transaction", transaction }
       };
@@ -35,6 +40,7 @@ namespace Janus {
 
     nlohmann::json trickle(const std::string& transaction, int64_t handleId, const std::string& sdpMid, int32_t sdpMLineIndex, const std::string& candidate) {
       return {
+	  	{ "p2p", p2p.c_str()},
         { "janus", JanusCommands::TRICKLE },
         { "transaction", transaction },
         { "handle_id", handleId },
@@ -44,6 +50,7 @@ namespace Janus {
 
     nlohmann::json trickleCompleted(const std::string& transaction, int64_t handleId) {
       return {
+	  	{ "p2p", p2p.c_str()},
         { "janus", JanusCommands::TRICKLE },
         { "transaction", transaction },
         { "handle_id", handleId },
@@ -52,6 +59,7 @@ namespace Janus {
     }
 
     nlohmann::json message(const std::string& transaction, int64_t handleId, nlohmann::json body) {
+      body["p2p"] = p2p.c_str();
       body["janus"] = "message";
       body["transaction"] = transaction;
       body["handle_id"] = handleId;
@@ -61,6 +69,7 @@ namespace Janus {
 
     nlohmann::json hangup(const std::string& transaction, int64_t handleId) {
       return {
+	  	{ "p2p", p2p.c_str()},
         { "janus", JanusCommands::HANGUP },
         { "transaction", transaction },
         { "handle_id", handleId }
