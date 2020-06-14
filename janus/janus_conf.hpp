@@ -19,11 +19,13 @@ public:
 class JanusProxyConf final : public JanusConf
 {
 	public:
-		JanusProxyConf(){};
+		JanusProxyConf(){isp2p = "no"};
 		~JanusProxyConf() = default;
 
 		std::string url() override;
 		std::string plugin() override;
+
+		std::bool isp2p;
 };
 
 

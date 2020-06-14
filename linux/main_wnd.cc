@@ -51,6 +51,10 @@ gboolean OnDestroyedCallback(GtkWidget* widget,
 void OnClickedCallback(GtkWidget* widget, gpointer data) {
   reinterpret_cast<GtkMainWnd*>(data)->OnClicked(widget);
 }
+void OnClickedCallback2(GtkWidget* widget, gpointer data) {
+  reinterpret_cast<GtkMainWnd*>(data)->OnClicked2(widget);
+}
+
 
 gboolean SimulateButtonClick(gpointer button) {
   g_signal_emit_by_name(button, "clicked");
@@ -301,6 +305,11 @@ void GtkMainWnd::SwitchToConnectUI() {
   g_signal_connect(button, "clicked", G_CALLBACK(OnClickedCallback), this);
   gtk_container_add(GTK_CONTAINER(hbox), button);
 
+  GtkWidget* button2 = gtk_button_new_with_label("Connect(p2p)");
+  gtk_widget_set_size_request(button2, 70, 30);
+  g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback2), this);
+  gtk_container_add(GTK_CONTAINER(hbox), button2);
+
   GtkWidget* halign = gtk_alignment_new(1, 0, 0, 0);
   gtk_container_add(GTK_CONTAINER(halign), hbox);
   gtk_box_pack_start(GTK_BOX(vbox_), halign, FALSE, FALSE, 0);
@@ -409,8 +418,21 @@ void GtkMainWnd::OnClicked(GtkWidget* widget) {
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
   //callback_->StartLogin(server_, port); 
-  callback_->start();
+  callback_->start(0);
 }
+
+void GtkMainWnd::OnClicked2(GtkWidget* widget) {
+  // Make the connect button insensitive, so that it cannot be clicked more than
+  // once.  Now that the connection includes auto-retry, it should not be
+  // necessary to click it more than once.
+  gtk_widget_set_sensitive(widget, false);
+  server_ = gtk_entry_get_text(GTK_ENTRY(server_edit_));
+  port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
+  int port = port_.length() ? atoi(port_.c_str()) : 0;
+  //callback_->StartLogin(server_, port); 
+  callback_->start(1);
+}
+
 
 void GtkMainWnd::OnKeyPress(GtkWidget* widget, GdkEventKey* key) {
   if (key->type == GDK_KEY_PRESS) {

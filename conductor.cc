@@ -470,10 +470,10 @@ void* Conductor::janus_fun(void *callback){
 	}
 }
 
-void Conductor::start(){
+void Conductor::start(std::bool isp2p){
 	//std::thread thread1(janus_fun, std::ref(client_));
 	//pthread_create(&hHandle, NULL, janus_fun, (void *)client_);	   //create a thread;
-	client_->Start();
+	client_->Start(isp2p);
 }
 
 void Conductor::replace_all_distinct(std::string&           str, const std::string& old_value,const std::string& new_value)     
@@ -646,7 +646,7 @@ void Conductor::OnReady1() {
 
 
 void Conductor::OnReady() {
-  main_wnd_->QueueUIThreadCallback(10, NULL);
+  main_wnd_->QueueUIThreadCallback(ON_READY1, NULL);
 }
 
 
@@ -757,7 +757,7 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
       track->Release();
       break;
     }
-	case 10:{
+	case ON_READY1:{
 		OnReady1();
 		//main_wnd_->SwitchToStreamingUI1();
 		break;

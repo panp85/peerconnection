@@ -11,7 +11,7 @@ namespace Janus {
   
   namespace Messages {
 	std::string p2p = "no";
-	std::string root_id = "";
+	std::string root_id = "0";
 	
     nlohmann::json create(const std::string& transaction) {
       return {
@@ -196,8 +196,13 @@ namespace Janus {
 
       return;
     }
-
-    if(header == "success" && context->getString("command", "") == JanusCommands::ATTACH && this->_plugin == nullptr) {
+	
+	if(header == "_peers"){
+		
+	}
+	
+    if(header == "success" && context->getString("command", "") == JanusCommands::ATTACH 
+		&& this->_plugin == nullptr) {
       this->_handleId = message.value("data", nlohmann::json::object()).value("id", (int64_t) 0);
 
       auto pluginId = context->getString("plugin", "");

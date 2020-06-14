@@ -41,6 +41,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
     SEND_MESSAGE_TO_PEER,
     NEW_TRACK_ADDED,
     TRACK_REMOVED,
+    ON_READY1,
   };
 
   Conductor(PeerConnectionClient* client, MainWindow* main_wnd);
@@ -48,7 +49,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool connection_active() const;
 
   void Close() override;
- 	void start() override;
+ 	void start(std::bool isp2p) override;
 
  protected:
   ~Conductor();
