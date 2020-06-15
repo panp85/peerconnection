@@ -41,7 +41,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
     SEND_MESSAGE_TO_PEER,
     NEW_TRACK_ADDED,
     TRACK_REMOVED,
-    ON_READY1,
+    ON_READY_NOID,
+    ON_READY_WITHID,
   };
 
   Conductor(PeerConnectionClient* client, MainWindow* main_wnd);
@@ -49,7 +50,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool connection_active() const;
 
   void Close() override;
- 	void start(std::bool isp2p) override;
+ 	void start(bool isp2p) override;
 
  protected:
   ~Conductor();
@@ -102,6 +103,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
 
   //add by pp
   void OnReady() override;//go to create offer
+  void OnReady_withId(int64_t& id) override;//go to create offer
   void setRemoteDescription(int c_type, const std::string& c_sdp) override;
   void createOffer() override;
   //
@@ -126,7 +128,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   // Send a message to the remote peer.
   void SendMessage(const std::string& json_object);
 
-  int peer_id_;
+  int64_t peer_id_;
   bool loopback_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
@@ -139,7 +141,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
   
   pthread_t hHandle;
   static void* janus_fun(void *callback);
-  void OnReady1();
+  void OnReady_noId();
+  void OnReady_Id(int64_t& id);
   void setbitrate();
   void replace_all_distinct(std::string& str, const std::string& old_value,const std::string& new_value);
   std::string sdp_rate_set(int rate, const std::string &sdp);

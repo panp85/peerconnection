@@ -67,6 +67,7 @@ class GtkMainWnd : public MainWindow {
 
   // Callback for when the user clicks the "Connect" button.
   void OnClicked(GtkWidget* widget);
+  void OnClicked2(GtkWidget* widget);
 
   // Callback for keystrokes.  Used to capture Esc and Return.
   void OnKeyPress(GtkWidget* widget, GdkEventKey* key);

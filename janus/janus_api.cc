@@ -58,12 +58,12 @@ namespace Janus {
       };
     }
 
-    nlohmann::json message(const std::string& transaction, int64_t handleId, nlohmann::json body) {
+    nlohmann::json message(const std::string& transaction, int64_t handleId, nlohmann::json body, int64_t peer_id) {
       body["p2p"] = p2p.c_str();
       body["janus"] = "message";
       body["transaction"] = transaction;
       body["handle_id"] = handleId;
-
+	  body["socketId"] = peer_id;
       return body;
     }
 
@@ -83,6 +83,7 @@ namespace Janus {
   JanusApi::JanusApi(const std::shared_ptr<Random>& random, const std::shared_ptr<TransportFactory>& transportFactory) {
     this->_transportFactory = transportFactory;
     this->_random = random;
+	this->isp2p = false;
   }
 
   JanusApi::~JanusApi() {
@@ -93,6 +94,10 @@ namespace Janus {
     this->readyState(ReadyState::INIT);
 
     this->_transport = this->_transportFactory->create(conf->url(), this->shared_from_this());
+	this->isp2p = conf->isp2p;
+	if(conf->isp2p){
+		Messages::p2p = "yes";
+	}
     this->_delegate = delegate;
     this->_platform = std::static_pointer_cast<PlatformImpl>(platform);
 
@@ -116,6 +121,7 @@ namespace Janus {
 
     if(command == JanusCommands::ATTACH) {
       auto plugin = payload->getString("plugin", "");
+	  //int64_t peerid = payload->getInt("peer_id", 0);
       this->_transport->send(Messages::attach(transaction, plugin), payload);
 
       return;
@@ -197,10 +203,11 @@ namespace Janus {
       return;
     }
 	
-	if(header == "_peers"){
+	if(header == "_new_peer"){
+		int64_t socketid = message.value("data", nlohmann::json::object()).value("socketId", (int64_t) 0);
 		
 	}
-	
+
     if(header == "success" && context->getString("command", "") == JanusCommands::ATTACH 
 		&& this->_plugin == nullptr) {
       this->_handleId = message.value("data", nlohmann::json::object()).value("id", (int64_t) 0);
@@ -210,8 +217,19 @@ namespace Janus {
 
       this->readyState(ReadyState::READY);
 	  std::cout << "ppt, go to onReady janusApi" << std::endl;
-      this->_delegate->onReady();
-
+	  if(!isp2p){
+      	this->_delegate->onReady();
+	  }
+	  else{
+	  	std::string peers = message.value("connections", "0");
+		int index = peers.find(",");
+	  	if(index >= 1){
+	  		std::string peer = peers.substr(0, index);
+			int64_t peer_id = std::stoll(peer);
+			std::cout << "ppt, peer:" + peer + ", go to onReady janusApi, to int64: " << peer_id << std::endl;	
+			this->_delegate->onReady_withId(peer_id);
+	  	}
+	  }
       return;
     }
 
@@ -303,8 +321,9 @@ namespace Janus {
   void JanusApi::onCommandResult(const nlohmann::json& body, const std::shared_ptr<Bundle>& context) {
     auto transaction = this->_random->generate();
     auto handleId = this->handleId(context);
+	int64_t peerid = context->getInt("peer_id", 0);
 
-    auto message = Messages::message(transaction, handleId, body);
+    auto message = Messages::message(transaction, handleId, body, peerid);
     this->_transport->send(message, context);
   }
 

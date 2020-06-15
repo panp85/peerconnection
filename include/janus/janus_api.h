@@ -63,6 +63,8 @@ namespace Janus {
 
       int64_t handleId(const std::shared_ptr<Bundle>& context);
 
+	  bool isp2p;
+
     private:
       ReadyState readyState();
       void readyState(ReadyState readyState);

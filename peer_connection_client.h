@@ -41,6 +41,7 @@ struct PeerConnectionClientObserver {
   virtual void OnMessageSent(int err) = 0;
   virtual void OnServerConnectionFailure() = 0;
   virtual void OnReady() = 0;
+  virtual void OnReady_withId(int64_t& id) = 0;
   virtual void setRemoteDescription(int c_type, const std::string& c_sdp) = 0;
   virtual void createOffer() = 0;
  protected:
@@ -54,6 +55,7 @@ public:
     //~JanusProxyProtocolDelegate(){};
 
     void onReady() override;
+	void onReady_withId(int64_t& id) override;
     void onClose() override;
     void onError(const ::Janus::JanusError & error, const std::shared_ptr<::Janus::Bundle> & context) override;
     void onEvent(const std::shared_ptr<::Janus::JanusEvent> & event, const std::shared_ptr<::Janus::Bundle> & context) override;
@@ -68,8 +70,8 @@ class JanusPeerFactory : public Janus::PeerFactory
 //	class JavaProxy final : ::djinni::JavaProxyHandle<JavaProxy>, public ::Janus::PeerFactory
 {
 public:
-	JanusPeerFactory(){};
-	~JanusPeerFactory(){};
+	JanusPeerFactory(){}
+	~JanusPeerFactory(){}
 
 	std::shared_ptr<::Janus::Peer> create(int64_t id, const std::shared_ptr<::Janus::Protocol> & owner) override;
 	void onIceCompleted();
@@ -130,7 +132,7 @@ class PeerConnectionClient : public sigslot::has_slots<>,
   void Connect(const std::string& server,
                int port,
                const std::string& client_name);
-  void Start(std::bool isp2p);
+  void Start(bool isp2p);
   
   void onIceCompleted();
   void onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp);
@@ -223,6 +225,9 @@ public:
 	}
 	void onOffer(std::string& sdp){
 		_platformImpl->protocol()->onOffer(sdp, _bundle);
+	}
+	void onAnswer(std::string& sdp){
+		_platformImpl->protocol()->onAnswer(sdp, _bundle);
 	}
 };
 

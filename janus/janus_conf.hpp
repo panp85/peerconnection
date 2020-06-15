@@ -14,18 +14,20 @@ public:
     virtual std::string url() = 0;
 
     virtual std::string plugin() = 0;
+
+	bool isp2p;
 };
 
 class JanusProxyConf final : public JanusConf
 {
 	public:
-		JanusProxyConf(){isp2p = "no"};
+		JanusProxyConf(){isp2p = false;}
 		~JanusProxyConf() = default;
 
 		std::string url() override;
 		std::string plugin() override;
 
-		std::bool isp2p;
+		
 };
 
 

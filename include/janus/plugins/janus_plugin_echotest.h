@@ -24,7 +24,7 @@ namespace Janus {
       void command(const std::string& command, const std::shared_ptr<Bundle>& payload);
       void onEvent(const std::shared_ptr<JanusEvent>& event, const std::shared_ptr<Bundle>& context);
       void onOffer(const std::string& sdp, const std::shared_ptr<Bundle>& context);
-      void onAnswer(const std::string& sdp, const std::shared_ptr<Bundle>& context) {}
+      void onAnswer(const std::string& sdp, const std::shared_ptr<Bundle>& context);
 
       std::string name() {
         return JanusPlugins::ECHO_TEST;

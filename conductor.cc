@@ -462,7 +462,7 @@ void Conductor::StartLogin(const std::string& server, int port) {
 
 void* Conductor::janus_fun(void *callback){
 	std::cout<<"janus_fun.\n";
-	((PeerConnectionClient*)callback)->Start();
+	//((PeerConnectionClient*)callback)->Start();
 	std::cout<<"janus_fun over.\n";
 	while(1){
 		std::cout<<"while Conductor::janus_fun.\n";
@@ -470,7 +470,7 @@ void* Conductor::janus_fun(void *callback){
 	}
 }
 
-void Conductor::start(std::bool isp2p){
+void Conductor::start(bool isp2p){
 	//std::thread thread1(janus_fun, std::ref(client_));
 	//pthread_create(&hHandle, NULL, janus_fun, (void *)client_);	   //create a thread;
 	client_->Start(isp2p);
@@ -622,14 +622,13 @@ void Conductor::ConnectToPeer(int peer_id) {
   }
 }
 
-void Conductor::OnReady1() {
+void Conductor::OnReady_noId() {
   if (peer_connection_.get()) {
     main_wnd_->MessageBox(
         "Error", "We only support connecting to one peer at a time", true);
     return;
   }
-  RTC_LOG(LS_ERROR) << "ppt, Conductor::OnReady.";
-  std::cout << "ppt, Conductor::OnReady." << std::endl;
+  RTC_LOG(LS_ERROR) << "ppt, Conductor::OnReady_noId.";
   //while(1){}
   if (InitializePeerConnection()) {
     peer_id_ = 11111;
@@ -644,9 +643,36 @@ void Conductor::OnReady1() {
   }
 }
 
+void Conductor::OnReady_Id(int64_t& id) {
+  if (peer_connection_.get()) {
+    main_wnd_->MessageBox(
+        "Error", "We only support connecting to one peer at a time", true);
+    return;
+  }
+  RTC_LOG(LS_ERROR) << "ppt, Conductor::OnReady.";
+  //while(1){}
+  if (InitializePeerConnection()) {
+    peer_id_ = id;
+	std::string cmd = std::string("13Q3wnLuN7");//JanusCommands::CALL
+    std::cout << "client_->dispatch call" << std::endl;
+	client_->_bundle->setInt("peer_id", peer_id_);
+	client_->dispatch(cmd);
+	
+    //peer_connection_->CreateOffer(
+    //    this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
+  } else {
+    main_wnd_->MessageBox("Error", "Failed to initialize PeerConnection", true);
+  }
+}
+
 
 void Conductor::OnReady() {
-  main_wnd_->QueueUIThreadCallback(ON_READY1, NULL);
+  main_wnd_->QueueUIThreadCallback(ON_READY_NOID, NULL);
+}
+
+void Conductor::OnReady_withId(int64_t& id) {
+  peer_id_ = id;
+  main_wnd_->QueueUIThreadCallback(ON_READY_WITHID, NULL);
 }
 
 
@@ -757,8 +783,14 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
       track->Release();
       break;
     }
-	case ON_READY1:{
-		OnReady1();
+	case ON_READY_NOID:{
+		OnReady_noId();
+		//main_wnd_->SwitchToStreamingUI1();
+		break;
+	}
+	case ON_READY_WITHID:{
+		int64_t* id = reinterpret_cast<int64_t *>(data);
+		OnReady_Id(*id);
 		//main_wnd_->SwitchToStreamingUI1();
 		break;
 	}
@@ -794,9 +826,11 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
       webrtc::SdpTypeToString(desc->GetType());
   jmessage[kSessionDescriptionSdpName] = sdp;
   //SendMessage(writer.write(jmessage));
-  if(webrtc::SdpTypeToString(desc->GetType()).equals("offer")){
+  if(!strcmp(webrtc::SdpTypeToString(desc->GetType()), "offer")){
+  	RTC_LOG(LS_ERROR) << "is offer";
   	client_->onOffer(sdp);
   }else{
+  	RTC_LOG(LS_ERROR) << "is answer";
   	client_->onAnswer(sdp);
   }
 }
