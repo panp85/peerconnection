@@ -7,6 +7,8 @@ namespace Janus {
 
 std::string const JanusCommands::CALL = {"13Q3wnLuN7"};
 
+std::string const JanusCommands::CALL_ANSWER = {"CALL_ANSWER"};
+
 std::string const JanusCommands::UPDATE = {"nOigt76Vb3"};
 
 std::string const JanusCommands::LIST = {"EhugLy7lgh"};

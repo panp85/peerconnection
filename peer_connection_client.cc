@@ -22,6 +22,8 @@
 #include "janus/protocol_delegate.hpp"
 #include "janus/platform_impl.h"
 #include "janus/janus_impl.h"
+#include "janus/janus_event_impl.h"
+
 #include <iostream>
 
 namespace {
@@ -123,7 +125,7 @@ void PeerConnectionClient::Connect(const std::string& server,
 }
 
 void PeerConnectionClient::onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp) {
-	_factory->c_owner->onIceCandidate(mid, index, sdp, _factory->c_id);
+	_factory->c_owner->onIceCandidate(mid, index, sdp, _factory->c_id, _bundle->getInt("peer_id", -1));
 }
 
 void PeerConnectionClient::Start(bool isp2p) {
@@ -156,8 +158,8 @@ void JanusPeerFactory::onIceCompleted(){
 }
 
 std::string Janus::JanusProxyConf::url(){
-	//return "http://192.168.8.109:8088/janus";
-	return "http://139.196.204.25:8088/janus";
+	return "http://192.168.8.109:8088/janus";
+	//return "http://139.196.204.25:8088/janus";
 }
 
 std::string Janus::JanusProxyConf::plugin(){
@@ -169,8 +171,8 @@ void JanusProxyProtocolDelegate::onReady() {
 	callback_->OnReady();
 }
 
-void JanusProxyProtocolDelegate::onReady_withId(int64_t& id) {
-	callback_->OnReady_withId(id);
+void JanusProxyProtocolDelegate::onReady_withId(int64_t id, int offer) {
+	callback_->OnReady_withId(id, offer);
 }
 
 void JanusProxyProtocolDelegate::setCallback(struct PeerConnectionClientObserver *callback){
@@ -185,8 +187,23 @@ void JanusProxyProtocolDelegate::onError(const ::Janus::JanusError & c_error, co
 	
 }
 
-void JanusProxyProtocolDelegate::onEvent(const std::shared_ptr<::Janus::JanusEvent> & c_event, const std::shared_ptr<::Janus::Bundle> & c_context) {
+void JanusProxyProtocolDelegate::onEvent(const std::shared_ptr<::Janus::JanusEvent> & event, const std::shared_ptr<::Janus::Bundle> & c_context) {
+	RTC_LOG(WARNING)
+			<< "JanusProxyProtocolDelegate::onEvent";	
+
+	::Janus::JanusEvent *event_c = event.get();
+	::Janus::JanusEventImpl *event_impl = static_cast<::Janus::JanusEventImpl*>(event_c);
+
+	std::shared_ptr<Janus::JanusData> data = event_impl->data();
 	
+	auto sdpMid = data->getString("sdpMid", "");
+    int sdpMLineIndex = data->getInt("sdpMLineIndex", -1);
+    auto candidate = data->getString("candidate", "");
+	RTC_LOG(WARNING)
+        << "conductor callback_->addIceCandidate, sdpMid: " << sdpMid
+        << ", sdpMLineIndex: " << sdpMLineIndex 
+        << ", candidate:" << candidate;
+	callback_->addIceCandidate(sdpMid, sdpMLineIndex, candidate);
 }
 
 void JanusProxyProtocolDelegate::onHangup(const std::string & c_reason) {

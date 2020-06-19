@@ -439,6 +439,27 @@ void Conductor::OnMessageFromPeer(int peer_id, const std::string& message) {
   }
 }
 
+void Conductor::addIceCandidate(std::string& sdp_mid, int sdp_mlineindex, std::string& sdp){
+	webrtc::SdpParseError error;
+    std::unique_ptr<webrtc::IceCandidateInterface> candidate(
+        webrtc::CreateIceCandidate(sdp_mid, sdp_mlineindex, sdp, &error));
+    if (!candidate.get()) {
+      RTC_LOG(WARNING) << "Can't parse received candidate message. "
+                       << "SdpParseError was: " << error.description;
+      return;
+    }
+	RTC_LOG(INFO) << " candidate ok";
+	if(!peer_connection_.get()){
+		RTC_LOG(INFO) << "peer_connection_ failed";
+	}
+    if (!peer_connection_->AddIceCandidate(candidate.get())) {
+      RTC_LOG(WARNING) << "Failed to apply the received candidate";
+      return;
+    }
+    RTC_LOG(INFO) << " Received candidate :" << sdp;
+}
+
+
 void Conductor::OnMessageSent(int err) {
   // Process the next pending message if any.
   main_wnd_->QueueUIThreadCallback(SEND_MESSAGE_TO_PEER, NULL);
@@ -492,7 +513,7 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 	
 	  if (!peer_connection_.get()) {
 		RTC_DCHECK(peer_id_ == -1);
-		peer_id_ = 111111;
+		//peer_id_ = 111111;
 	
 		if (!InitializePeerConnection()) {
 		  RTC_LOG(LS_ERROR) << "Failed to initialize our PeerConnection instance";
@@ -542,9 +563,11 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		*/
 		webrtc::SdpType type;// = *type_maybe;
 		if(c_type == 0){
+			RTC_LOG(LS_ERROR) << "setRemoteDescription offer";
 			type = webrtc::SdpType::kOffer;
 		}
 		else if(c_type == 1){
+			RTC_LOG(LS_ERROR) << "setRemoteDescription answer";
 			type = webrtc::SdpType::kAnswer;
 		}
 		//webrtc::SdpType type = *type_maybe;
@@ -574,10 +597,12 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 			DummySetSessionDescriptionObserver::Create(),
 			session_description.release());
 		if (type == webrtc::SdpType::kOffer) {
+		  RTC_LOG(LS_ERROR) << "peer_connection_->CreateAnswer";
 		  peer_connection_->CreateAnswer(
 			  this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 		}
 }
+
 std::string Conductor::sdp_rate_set(int rate, const std::string &sdp)
 {
 	if(rate == -1){
@@ -643,24 +668,32 @@ void Conductor::OnReady_noId() {
   }
 }
 
-void Conductor::OnReady_Id(int64_t& id) {
+void Conductor::OnReady_Id() {
   if (peer_connection_.get()) {
     main_wnd_->MessageBox(
         "Error", "We only support connecting to one peer at a time", true);
     return;
   }
-  RTC_LOG(LS_ERROR) << "ppt, Conductor::OnReady.";
-  //while(1){}
+  RTC_LOG(LS_ERROR) << "ppt, Conductor::OnReady_Id.";
   if (InitializePeerConnection()) {
-    peer_id_ = id;
-	std::string cmd = std::string("13Q3wnLuN7");//JanusCommands::CALL
+  	RTC_LOG(LS_ERROR) << "InitializePeerConnection ok.";
+	//while(1){sleep(1);}
+    //peer_id_ = id;
+    std::string cmd;
+    if(offer_type){
+		cmd = std::string("13Q3wnLuN7");//JanusCommands::CALL
+  	}
+	else
+	{
+		cmd = std::string("CALL_ANSWER");//JanusCommands::CALL
+	}
     std::cout << "client_->dispatch call" << std::endl;
 	client_->_bundle->setInt("peer_id", peer_id_);
+	
 	client_->dispatch(cmd);
 	
-    //peer_connection_->CreateOffer(
-    //    this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
   } else {
+  	RTC_LOG(LS_ERROR) << "InitializePeerConnection failed.";
     main_wnd_->MessageBox("Error", "Failed to initialize PeerConnection", true);
   }
 }
@@ -670,8 +703,9 @@ void Conductor::OnReady() {
   main_wnd_->QueueUIThreadCallback(ON_READY_NOID, NULL);
 }
 
-void Conductor::OnReady_withId(int64_t& id) {
+void Conductor::OnReady_withId(int64_t id, int offer) {
   peer_id_ = id;
+  offer_type = offer;
   main_wnd_->QueueUIThreadCallback(ON_READY_WITHID, NULL);
 }
 
@@ -789,8 +823,8 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
 		break;
 	}
 	case ON_READY_WITHID:{
-		int64_t* id = reinterpret_cast<int64_t *>(data);
-		OnReady_Id(*id);
+		//int64_t* id = reinterpret_cast<int64_t *>(data);
+		OnReady_Id();
 		//main_wnd_->SwitchToStreamingUI1();
 		break;
 	}

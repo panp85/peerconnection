@@ -390,6 +390,7 @@ void GtkMainWnd::SwitchToStreamingUI1() {
 
   gtk_widget_show_all(window_);
   std::cout << "ppt, SwitchToStreamingUI 4 " << std::endl;
+  //while(1){sleep(1);}
 }
 
 

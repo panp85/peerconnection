@@ -12,6 +12,7 @@ namespace Janus {
   namespace Messages {
 	std::string p2p = "no";
 	std::string root_id = "0";
+	int64_t session_id = -1;
 	
     nlohmann::json create(const std::string& transaction) {
       return {
@@ -23,6 +24,7 @@ namespace Janus {
     nlohmann::json attach(const std::string& transaction, const std::string& plugin) {
       return {
       	{ "p2p", p2p.c_str()},
+      	{ "session_id", session_id},
       	{ "room", root_id.c_str()},
         { "janus", JanusCommands::ATTACH },
         { "plugin", plugin },
@@ -33,17 +35,21 @@ namespace Janus {
     nlohmann::json destroy(const std::string& transaction) {
       return {
 	  	{ "p2p", p2p.c_str()},
+	  	{ "session_id", session_id},
         { "janus", JanusCommands::DESTROY },
         { "transaction", transaction }
       };
     }
 
-    nlohmann::json trickle(const std::string& transaction, int64_t handleId, const std::string& sdpMid, int32_t sdpMLineIndex, const std::string& candidate) {
+    nlohmann::json trickle(const std::string& transaction, int64_t handleId, const std::string& sdpMid, int32_t sdpMLineIndex, 
+    	const std::string& candidate, int64_t peer_id) {
       return {
 	  	{ "p2p", p2p.c_str()},
+	  	{ "session_id", session_id},
         { "janus", JanusCommands::TRICKLE },
         { "transaction", transaction },
         { "handle_id", handleId },
+        { "peer_id", peer_id },
         { "candidate", { { "sdpMid", sdpMid }, { "sdpMLineIndex", sdpMLineIndex }, { "candidate", candidate } } }
       };
     }
@@ -51,6 +57,7 @@ namespace Janus {
     nlohmann::json trickleCompleted(const std::string& transaction, int64_t handleId) {
       return {
 	  	{ "p2p", p2p.c_str()},
+	  	{ "session_id", session_id},
         { "janus", JanusCommands::TRICKLE },
         { "transaction", transaction },
         { "handle_id", handleId },
@@ -61,15 +68,17 @@ namespace Janus {
     nlohmann::json message(const std::string& transaction, int64_t handleId, nlohmann::json body, int64_t peer_id) {
       body["p2p"] = p2p.c_str();
       body["janus"] = "message";
+	  body["session_id"] = session_id;
       body["transaction"] = transaction;
       body["handle_id"] = handleId;
-	  body["socketId"] = peer_id;
+	  body["peer_id"] = peer_id;
       return body;
     }
 
     nlohmann::json hangup(const std::string& transaction, int64_t handleId) {
       return {
 	  	{ "p2p", p2p.c_str()},
+	  	{ "session_id", session_id},
         { "janus", JanusCommands::HANGUP },
         { "transaction", transaction },
         { "handle_id", handleId }
@@ -111,6 +120,7 @@ namespace Janus {
     payload->setString("command", command);
     auto transaction = this->_random->generate();
     auto handleId = this->handleId(payload);
+	std::cout << "JanusApi::dispatch: " << command << std::endl;
 
     if(command == JanusCommands::CREATE) {
       auto msg = Messages::create(transaction);
@@ -143,8 +153,9 @@ namespace Janus {
       auto sdpMid = payload->getString("sdpMid", "");
       auto sdpMLineIndex = payload->getInt("sdpMLineIndex", -1);
       auto candidate = payload->getString("candidate", "");
+	  auto peer_id = payload->getInt("peer_id", -1);
 
-      auto msg = Messages::trickle(transaction, handleId, sdpMid, sdpMLineIndex, candidate);
+      auto msg = Messages::trickle(transaction, handleId, sdpMid, sdpMLineIndex, candidate, peer_id);
       this->_transport->send(msg, payload);
 
       return;
@@ -181,7 +192,8 @@ namespace Janus {
   void JanusApi::onMessage(const nlohmann::json& message, const std::shared_ptr<Bundle>& context) {
     auto header = message.value("janus", "");
     auto str = message.dump();
-
+	std::cout << "JanusApi::onMessage, header:" << header << std::endl;
+	
     if(header == "error") {
       auto errorContent = message.value("error", nlohmann::json::object());
       auto code = errorContent.value("code", -1);
@@ -196,16 +208,19 @@ namespace Janus {
     if(header == "success" && context->getString("command", "") == JanusCommands::CREATE) {
       auto id = message.value("data", nlohmann::json::object()).value("id", (int64_t) 0);
       auto idAsString = std::to_string(id);
+	  Messages::session_id = id;
       this->_transport->sessionId(idAsString);
-	  std::cout << "CREATE ok, go to ATTACH" << std::endl;
+	  std::cout << "CREATE ok, session_id:" << id << ", go to ATTACH" << std::endl;
       this->dispatch(JanusCommands::ATTACH, context);
 
       return;
     }
 	
 	if(header == "_new_peer"){
-		int64_t socketid = message.value("data", nlohmann::json::object()).value("socketId", (int64_t) 0);
+		int64_t peer_id = message.value("data", nlohmann::json::object()).value("peer_id", (int64_t) 0);
 		
+		this->_delegate->onReady_withId(peer_id, 0);//
+		return;
 	}
 
     if(header == "success" && context->getString("command", "") == JanusCommands::ATTACH 
@@ -227,11 +242,15 @@ namespace Janus {
 	  		std::string peer = peers.substr(0, index);
 			int64_t peer_id = std::stoll(peer);
 			std::cout << "ppt, peer:" + peer + ", go to onReady janusApi, to int64: " << peer_id << std::endl;	
-			this->_delegate->onReady_withId(peer_id);
+			this->_delegate->onReady_withId(peer_id, 1);//创建peerconnection等webrtc相关内容
 	  	}
+		else{
+			std::cout << "no peers" << std::endl;
+		}
 	  }
       return;
     }
+	
 
     if(header == "success" && context->getString("command", "") == JanusCommands::DESTROY) {
       this->_transport->close();
@@ -251,6 +270,24 @@ namespace Janus {
     }
 
     auto sender = message.value("sender", this->_handleId);
+	
+	if(header == "trickle") {
+	  auto data = message.value("data", nlohmann::json::object());
+	  
+	  auto sdpMid = data.value("sdpMid", "");
+      auto sdpMLineIndex = data.value("sdpMLineIndex", -1);
+      auto candidate = data.value("candidate", "");
+		std::cout
+        << "onMessage, sdpMid: " << sdpMid
+        << ", sdpMLineIndex: " << sdpMLineIndex 
+        << ", candidate:" << candidate << std::endl;	  
+      //std::shared_ptr<Bundle> bundle_trickle = std::shared_ptr<BundleImpl>();
+
+	  std::shared_ptr<JanusEventImpl> evt = std::make_shared<JanusEventImpl>(sender, data);
+	  this->_delegate->onEvent(evt, context);
+	  
+	  return;
+	}
 
     if(header == "event") {
       auto data = message.value("plugindata", nlohmann::json::object()).value("data", nlohmann::json::object());
@@ -260,6 +297,7 @@ namespace Janus {
       if(jsep.empty()) {
         evt = std::make_shared<JanusEventImpl>(sender, data);
       } else {
+      	std::cout << "has jsep" << std::endl;
         evt = std::make_shared<JanusEventImpl>(sender, data, jsep);
       }
       this->_plugin->onEvent(evt, context);
@@ -275,23 +313,27 @@ namespace Janus {
       return;
     }
 
-    this->_delegate->onEvent(evt, context);
+    //this->_delegate->onEvent(evt, context);
   }
 
   void JanusApi::onOffer(const std::string& sdp, const std::shared_ptr<Bundle>& context) {
+  	std::cout << "JanusApi::onOffer" << std::endl;
     this->_plugin->onOffer(sdp, context);
   }
 
   void JanusApi::onAnswer(const std::string& sdp, const std::shared_ptr<Bundle>& context) {
+  	std::cout << "JanusApi::onAnswer" << std::endl;
     this->_plugin->onAnswer(sdp, context);
   }
 
-  void JanusApi::onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp, int64_t id) {
+  void JanusApi::onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp, int64_t id, int64_t peer_id) {
     auto bundle = Bundle::create();
     bundle->setString("sdpMid", mid);
     bundle->setInt("sdpMLineIndex", index);
     bundle->setString("candidate", sdp);
     bundle->setInt("handleId", id);
+	bundle->setInt("peer_id", peer_id);
+	
 
     this->dispatch(JanusCommands::TRICKLE, bundle);
   }
@@ -322,6 +364,7 @@ namespace Janus {
     auto transaction = this->_random->generate();
     auto handleId = this->handleId(context);
 	int64_t peerid = context->getInt("peer_id", 0);
+	std::cout << "JanusApi::onCommandResult, peerid: " << peerid << std::endl;
 
     auto message = Messages::message(transaction, handleId, body, peerid);
     this->_transport->send(message, context);

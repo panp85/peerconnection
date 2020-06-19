@@ -103,7 +103,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
 
   //add by pp
   void OnReady() override;//go to create offer
-  void OnReady_withId(int64_t& id) override;//go to create offer
+  void OnReady_withId(int64_t id, int offer) override;//go to create offer
   void setRemoteDescription(int c_type, const std::string& c_sdp) override;
   void createOffer() override;
   //
@@ -129,6 +129,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   void SendMessage(const std::string& json_object);
 
   int64_t peer_id_;
+  int offer_type;
   bool loopback_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
@@ -142,7 +143,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
   pthread_t hHandle;
   static void* janus_fun(void *callback);
   void OnReady_noId();
-  void OnReady_Id(int64_t& id);
+  void OnReady_Id();
+  void addIceCandidate(std::string& sdp_mid, int sdp_mlineindex, std::string& sdp) override;
   void setbitrate();
   void replace_all_distinct(std::string& str, const std::string& old_value,const std::string& new_value);
   std::string sdp_rate_set(int rate, const std::string &sdp);

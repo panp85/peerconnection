@@ -4,6 +4,8 @@
 #include "janus/constraints_builder.hpp"
 #include "janus/constraints.hpp"
 #include "janus/sdp_type.hpp"
+#include <iostream>
+#include <unistd.h>
 
 namespace Janus {
 
@@ -33,6 +35,7 @@ namespace Janus {
   void JanusPluginEchotest::command(const std::string& command, const std::shared_ptr<Bundle>& payload) {
     if(command == JanusCommands::CALL) {
       this->_peer = this->_peerFactory->create(this->_handleId, this->_owner);
+	
       auto constraints = payload->getConstraints();
 
       constraints.sdp.send_audio = constraints.sdp.receive_audio = payload->getBool("audio", true);
@@ -43,6 +46,12 @@ namespace Janus {
 
       return;
     }
+	
+	if(command == JanusCommands::CALL_ANSWER) {
+      this->_peer = this->_peerFactory->create(this->_handleId, this->_owner);
+      return;
+    }
+	
 
     if(command == JanusCommands::UPDATE) {
       auto msg = Messages::update(payload->getBool("audio", true), payload->getBool("video", true));
@@ -56,11 +65,13 @@ namespace Janus {
     auto jsep = event->jsep();
 
     if(jsep != nullptr) {
+		std::cout << "JanusPluginEchotest::onEvent, setRemoteDescription.\n";
+		while(!this->_peer){usleep(100*1000);}
       this->_peer->setRemoteDescription(jsep->type(), jsep->sdp());
 
       return;
     }
-
+	
     this->_delegate->onPluginEvent(event, context);
   }
 

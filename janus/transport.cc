@@ -1,6 +1,7 @@
 #include "janus/transport.h"
 
 #include <regex>
+#include <iostream>
 
 namespace Janus {
 
@@ -62,7 +63,7 @@ namespace Janus {
       this->_notEmpty.wait(notEmptyLock, [this] {
         return this->_clients.size() != 0;
       });
-
+		std::cout << "_sendAsync 222.\n" << std::endl;
       auto client = this->_clients.front();
       this->_clients.pop();
 

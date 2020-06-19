@@ -55,7 +55,7 @@ namespace Janus {
 
       void onOffer(const std::string& sdp, const std::shared_ptr<Bundle>& context);
       void onAnswer(const std::string& sdp, const std::shared_ptr<Bundle>& context);
-      void onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp, int64_t id);
+      void onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp, int64_t id, int64_t peer_id);
       void onIceCompleted(int64_t id);
 
       void onCommandResult(const nlohmann::json& body, const std::shared_ptr<Bundle>& context);

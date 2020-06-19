@@ -12,6 +12,8 @@ struct JanusCommands final {
 
     static std::string const CALL;
 
+	static std::string const CALL_ANSWER;
+
     static std::string const UPDATE;
 
     static std::string const LIST;
