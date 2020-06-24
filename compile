@@ -1,2 +1,3 @@
 gn gen -C out/linux  --args="is_debug=false"
 ninja -C out/linux
+gn gen out/h264Debug --args="proprietary_codecs=true rtc_use_h264=true use_openh264=true ffmpeg_branding=\"Chrome\" "

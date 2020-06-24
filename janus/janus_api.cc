@@ -280,8 +280,10 @@ namespace Janus {
 		std::cout
         << "onMessage, sdpMid: " << sdpMid
         << ", sdpMLineIndex: " << sdpMLineIndex 
-        << ", candidate:" << candidate << std::endl;	  
+        << ", candidate:" << candidate << std::endl;
       //std::shared_ptr<Bundle> bundle_trickle = std::shared_ptr<BundleImpl>();
+
+	  //auto peer_id = data.value("peer_id", "");//每个不同的peer发过来的，都要发送到不同的pc，待处理
 
 	  std::shared_ptr<JanusEventImpl> evt = std::make_shared<JanusEventImpl>(sender, data);
 	  this->_delegate->onEvent(evt, context);
