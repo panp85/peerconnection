@@ -127,6 +127,7 @@ bool Conductor::connection_active() const {
 
 void Conductor::Close() {
   client_->SignOut();
+  client_->_janusImpl->close();
   DeletePeerConnection();
 }
 
