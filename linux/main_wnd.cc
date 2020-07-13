@@ -492,7 +492,7 @@ void GtkMainWnd::OnRowActivated(GtkTreeView* tree_view,
 void GtkMainWnd::OnRedraw() {
   
   gdk_threads_enter();
-  std::cout << "GtkMainWnd::OnRedraw" << std::endl;
+  //std::cout << "GtkMainWnd::OnRedraw" << std::endl;
   VideoRenderer* remote_renderer = remote_renderer_.get();
   if (remote_renderer && remote_renderer->image() != NULL &&
       draw_area_ != NULL/* && (flag++%2==0)*/) {
@@ -558,7 +558,7 @@ void GtkMainWnd::OnRedraw() {
 }
 
 void GtkMainWnd::Draw(GtkWidget* widget, cairo_t* cr) {
-  std::cout << "GtkMainWnd::Draw" << std::endl;
+  //std::cout << "GtkMainWnd::Draw" << std::endl;
 
 #if GTK_MAJOR_VERSION != 2
   cairo_format_t format = CAIRO_FORMAT_RGB24;
