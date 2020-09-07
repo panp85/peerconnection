@@ -75,8 +75,8 @@ class DummySetSessionDescriptionObserver
 class CapturerTrackSource : public webrtc::VideoTrackSource {
  public:
   static rtc::scoped_refptr<CapturerTrackSource> Create() {
-    const size_t kWidth = 320;
-    const size_t kHeight = 240;
+    const size_t kWidth = 640;
+    const size_t kHeight = 480;
     const size_t kFps = 15;
     std::unique_ptr<webrtc::test::VcmCapturer> capturer;
     std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
@@ -193,7 +193,12 @@ bool Conductor::CreatePeerConnection(bool dtls) {
   config.enable_dtls_srtp = dtls;
   webrtc::PeerConnectionInterface::IceServer server;
   server.uri = GetPeerConnectionString();
+  webrtc::PeerConnectionInterface::IceServer server2;
+  server2.uri = "turn:139.196.204.25:3478";
+  server2.username = "ts";
+  server2.password = "12345678";
   config.servers.push_back(server);
+  config.servers.push_back(server2);
 
   peer_connection_ = peer_connection_factory_->CreatePeerConnection(
       config, nullptr, nullptr, this);
