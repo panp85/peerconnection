@@ -55,6 +55,18 @@ void OnClickedCallback2(GtkWidget* widget, gpointer data) {
   reinterpret_cast<GtkMainWnd*>(data)->OnClicked2(widget);
 }
 
+void source_change(GtkWidget* widget, gpointer data) {
+/*
+    if(data == 1){
+        //gchar *ptr = gtk_entry_get_text(GTK_ENTRY(button));
+        //printf("组合框A发生改变，内容是：%s\n",ptr);
+    }else if(data == 2) {
+        //gchar *ptr = gtk_entry_get_text(GTK_ENTRY(button));
+        //printf("组合框A发生改变，内容是：%s\n",ptr);    
+    }
+    */
+}
+
 
 gboolean SimulateButtonClick(gpointer button) {
   g_signal_emit_by_name(button, "clicked");
@@ -233,7 +245,7 @@ bool GtkMainWnd::Create() {
   window_ = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   if (window_) {
     gtk_window_set_position(GTK_WINDOW(window_), GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window_), 640, 480);
+    gtk_window_set_default_size(GTK_WINDOW(window_), 700, 480);
     gtk_window_set_title(GTK_WINDOW(window_), "PeerConnection client");
     g_signal_connect(G_OBJECT(window_), "delete-event",
                      G_CALLBACK(&OnDestroyedCallback), this);
@@ -273,8 +285,10 @@ void GtkMainWnd::SwitchToConnectUI() {
   }
 
 #if GTK_MAJOR_VERSION == 2
+  std::cout << "GTK_MAJOR_VERSION == 2" << std::endl;
   vbox_ = gtk_vbox_new(FALSE, 5);
 #else
+  std::cout << "GTK_MAJOR_VERSION: " << GTK_MAJOR_VERSION << std::endl;
   vbox_ = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 #endif
   GtkWidget* valign = gtk_alignment_new(0, 1, 0, 0);
@@ -300,6 +314,45 @@ void GtkMainWnd::SwitchToConnectUI() {
   gtk_widget_set_size_request(port_edit_, 70, 30);
   gtk_container_add(GTK_CONTAINER(hbox), port_edit_);
 
+  //GList *items = NULL;
+
+  //items = g_list_append(items, (gpointer)("camera"));
+  //items = g_list_append(items, (gpointer)("files"));
+  GtkListStore *store = gtk_list_store_new( 1, G_TYPE_STRING);
+  GtkTreeIter	   iter;
+  gtk_list_store_append( store, &iter );
+  gtk_list_store_set( store, &iter, 0, "camera", -1 );
+  gtk_list_store_append( store, &iter );
+  gtk_list_store_set( store, &iter, 0, "files", -1 );
+
+  
+
+  GtkWidget *vbox = gtk_vbox_new(FALSE,0);
+  gtk_container_add(GTK_CONTAINER(hbox),vbox);
+
+  GtkWidget *label_source = gtk_label_new("source:");
+  gtk_container_add(GTK_CONTAINER(hbox), label_source);
+  //gtk_box_pack_start(GTK_BOX(hbox),label_source,FALSE,FALSE,5);
+  
+  //combo = gtk_combo_box_new();
+  combo = gtk_combo_box_new_with_model( GTK_TREE_MODEL( store ) );
+  
+  gtk_container_add(GTK_CONTAINER(hbox), combo);
+  
+
+  g_object_unref( G_OBJECT( store ) );
+  GtkCellRenderer *cell;
+  cell = gtk_cell_renderer_text_new();
+  gtk_cell_layout_pack_start( GTK_CELL_LAYOUT( combo ), cell, TRUE );
+  gtk_cell_layout_set_attributes( GTK_CELL_LAYOUT( combo ), cell, "text", 0, NULL );
+
+  gtk_combo_box_set_active_id (GTK_COMBO_BOX(combo), "files");
+  gtk_combo_box_set_active_iter (GTK_COMBO_BOX( combo ), &iter);
+  //gtk_box_pack_start(GTK_BOX(vbox),combo,FALSE,FALSE,5);
+  //gtk_combo_set_popdown_strings(GTK_COMBO_BOX(combo),items);
+  g_signal_connect(G_OBJECT(GTK_COMBO_BOX(combo)),"changed",G_CALLBACK(source_change),(gpointer)1);
+
+
   GtkWidget* button = gtk_button_new_with_label("Connect");
   gtk_widget_set_size_request(button, 70, 30);
   g_signal_connect(button, "clicked", G_CALLBACK(OnClickedCallback), this);
@@ -309,6 +362,13 @@ void GtkMainWnd::SwitchToConnectUI() {
   gtk_widget_set_size_request(button2, 70, 30);
   g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback2), this);
   gtk_container_add(GTK_CONTAINER(hbox), button2);
+/*
+  GtkWidget* button3 = gtk_button_new_with_label("Connect(file)");
+	gtk_widget_set_size_request(button3, 70, 30);
+	g_signal_connect(button3, "clicked", G_CALLBACK(OnClickedCallback2), this);
+	gtk_container_add(GTK_CONTAINER(hbox), button3);
+*/
+
 
   GtkWidget* halign = gtk_alignment_new(1, 0, 0, 0);
   gtk_container_add(GTK_CONTAINER(halign), hbox);
@@ -431,7 +491,27 @@ void GtkMainWnd::OnClicked2(GtkWidget* widget) {
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
   //callback_->StartLogin(server_, port); 
-  callback_->start(1);
+  GtkTreeIter   iter;
+  GtkTreeModel *model;
+  gchar *ptr = NULL;
+
+	/* Obtain currently selected item form combo box.
+	 * If nothing is selected, do nothing. */
+	if( gtk_combo_box_get_active_iter( GTK_COMBO_BOX(combo), &iter ) )
+	{
+	    /* Obtain data model from combo box. */
+	    model = gtk_combo_box_get_model( GTK_COMBO_BOX(combo) );
+
+	    /* Obtain string from model. */
+	    gtk_tree_model_get( model, &iter, 0, &ptr, -1 );
+	}
+  std::cout << "ppt, source: " << ptr <<  std::endl;
+  if(!strcmp(ptr, "camera")){
+  	callback_->start(1);
+  }
+  else{
+  	callback_->start(2);
+  }
 }
 
 
@@ -494,44 +574,58 @@ void GtkMainWnd::OnRedraw() {
   gdk_threads_enter();
   //std::cout << "GtkMainWnd::OnRedraw" << std::endl;
   VideoRenderer* remote_renderer = remote_renderer_.get();
+
+  const uint32_t* image;
+  uint32_t* scaled;
+  
   if (remote_renderer && remote_renderer->image() != NULL &&
       draw_area_ != NULL/* && (flag++%2==0)*/) {
       
     width_ = remote_renderer->width();
     height_ = remote_renderer->height();
-
+//	std::cout << "remote width_, height_: " << width_ << ", " <<  height_ << std::endl;
     if (!draw_buffer_.get()) {
       draw_buffer_size_ = (width_ * height_ * 4) * 4;
       draw_buffer_.reset(new uint8_t[draw_buffer_size_]);
       gtk_widget_set_size_request(draw_area_, width_ * 2, height_ * 2);
     }
 
-    const uint32_t* image =
+    image =
         reinterpret_cast<const uint32_t*>(remote_renderer->image());
-    uint32_t* scaled = reinterpret_cast<uint32_t*>(draw_buffer_.get());
+    scaled = reinterpret_cast<uint32_t*>(draw_buffer_.get());
     for (int r = 0; r < height_; ++r) {
       for (int c = 0; c < width_; ++c) {
         int x = c * 2;
-        scaled[x] = scaled[x + 1] = image[c];
+        scaled[x] = scaled[x + 1] = image[c];//同行两个像素点一样的值
       }
 
       uint32_t* prev_line = scaled;
       scaled += width_ * 2;
-      memcpy(scaled, prev_line, (width_ * 2) * 4);
+      memcpy(scaled, prev_line, (width_ * 2) * 4);//下一行和上一行相同
 
       image += width_;
-      scaled += width_ * 2;
+      scaled += width_ * 2;//调过两行
     }
-
+ // }
+	  /*
     VideoRenderer* local_renderer = local_renderer_.get();
     if (local_renderer && local_renderer->image()) {
+		if(width_ == 0){
+			width_ = local_renderer->width();
+	    	height_ = local_renderer->height();
+			if (!draw_buffer_.get()) {
+		      draw_buffer_size_ = (width_ * height_ * 4) * 4;
+		      draw_buffer_.reset(new uint8_t[draw_buffer_size_]);
+		      gtk_widget_set_size_request(draw_area_, width_ * 2, height_ * 2);
+		    }
+		}
       image = reinterpret_cast<const uint32_t*>(local_renderer->image());
       scaled = reinterpret_cast<uint32_t*>(draw_buffer_.get());
       // Position the local preview on the right side.
-      scaled += (width_ * 2) - (local_renderer->width() / 2);
+      scaled += (width_ * 2) - (local_renderer->width() / 2);//右下角1/4的位置
       // right margin...
-      scaled -= 10;
-      // ... towards the bottom.
+      scaled -= 10;//
+      // ... towards the bottom.////右下角1/4的位置
       scaled += (height_ * width_ * 4) - ((local_renderer->height() / 2) *
                                           (local_renderer->width() / 2) * 4);
       // bottom margin...
@@ -543,7 +637,7 @@ void GtkMainWnd::OnRedraw() {
         scaled += width_ * 2;
       }
     }
-
+	*/
 #if GTK_MAJOR_VERSION == 2
     gdk_draw_rgb_32_image(draw_area_->window,
                           draw_area_->style->fg_gc[GTK_STATE_NORMAL], 0, 0,
@@ -602,16 +696,20 @@ void GtkMainWnd::VideoRenderer::SetSize(int width, int height) {
 }
 
 void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
+	std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
 
+	//return;
   gdk_threads_enter();
-  //std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
+  
   rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
       video_frame.video_frame_buffer()->ToI420());
   //if((main_wnd_->flag++)%2 == 1){gdk_threads_leave();return;}
   if (video_frame.rotation() != webrtc::kVideoRotation_0) {
     buffer = webrtc::I420Buffer::Rotate(*buffer, video_frame.rotation());
   }
-  SetSize(buffer->width(), buffer->height());
+  
+  //std::cout << "ppt, GtkMainWnd::VideoRenderer::OnFrame: " << buffer->width() << ","  << buffer->height() <<  std::endl;
+  SetSize(buffer->width(), buffer->height());  
 
   // The order in the name of libyuv::I420To(ABGR,RGBA) is ambiguous because
   // it doesn't tell you if it is referring to how it is laid out in memory as

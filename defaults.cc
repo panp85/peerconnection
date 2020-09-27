@@ -40,7 +40,8 @@ std::string GetEnvVarOrDefault(const char* env_var_name,
 
 std::string GetPeerConnectionString() {
   //return GetEnvVarOrDefault("WEBRTC_CONNECT", "stun:stun.l.google.com:19302");
-  return GetEnvVarOrDefault("WEBRTC_CONNECT", "stun:139.196.204.25:3478");
+  //return GetEnvVarOrDefault("WEBRTC_CONNECT", "stun:139.196.204.25:3478");
+  return GetEnvVarOrDefault("WEBRTC_CONNECT", "stun:192.168.8.109:3478");
 }
 
 std::string GetDefaultServerName() {

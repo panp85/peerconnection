@@ -49,6 +49,8 @@
 #include "rtc_base/strings/json.h"
 #include "test/vcm_capturer.h"
 
+#include "media/common/fileCapturer.h"
+
 namespace {
 // Names used for a IceCandidate JSON object.
 const char kCandidateSdpMidName[] = "sdpMid";
@@ -108,6 +110,42 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
   }
   std::unique_ptr<webrtc::test::VcmCapturer> capturer_;
 };
+#if 1
+class FileCapturerTrackSource : public webrtc::VideoTrackSource {
+ public:
+  static rtc::scoped_refptr<FileCapturerTrackSource> Create() {
+	const size_t kWidth = 640;
+	const size_t kHeight = 480;
+	const size_t kFps = 15;
+	std::unique_ptr<FileCapturer> capturer;
+	/*
+	std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+		webrtc::VideoCaptureFactory::CreateDeviceInfo());
+	if (!info) {
+	  return nullptr;
+	}
+	
+	int num_devices = info->NumberOfDevices();
+	*/
+	capturer = absl::WrapUnique(
+		  FileCapturer::Create(kWidth, kHeight, kFps, 0));
+	return new
+			rtc::RefCountedObject<FileCapturerTrackSource>(std::move(capturer));
+	
+	//return nullptr;
+  }
+ protected:
+  explicit FileCapturerTrackSource(
+	  std::unique_ptr<FileCapturer> capturer)
+	  : VideoTrackSource(/*remote=*/false), capturer_(std::move(capturer)) {}
+ private:
+  rtc::VideoSourceInterface<webrtc::VideoFrame>* source() override {
+	return capturer_.get();
+  }
+  std::unique_ptr<FileCapturer> capturer_;
+};
+#endif 
+
 
 }  // namespace
 
@@ -194,7 +232,8 @@ bool Conductor::CreatePeerConnection(bool dtls) {
   webrtc::PeerConnectionInterface::IceServer server;
   server.uri = GetPeerConnectionString();
   webrtc::PeerConnectionInterface::IceServer server2;
-  server2.uri = "turn:139.196.204.25:3478";
+  //server2.uri = "turn:139.196.204.25:3478";
+  server2.uri = "turn:192.168.8.109:3478";
   server2.username = "ts";
   server2.password = "12345678";
   config.servers.push_back(server);
@@ -497,10 +536,11 @@ void* Conductor::janus_fun(void *callback){
 	}
 }
 
-void Conductor::start(bool isp2p){
+void Conductor::start(int mode){
 	//std::thread thread1(janus_fun, std::ref(client_));
 	//pthread_create(&hHandle, NULL, janus_fun, (void *)client_);	   //create a thread;
-	client_->Start(isp2p);
+	this->mode = mode;
+	client_->Start(mode);
 }
 
 void Conductor::replace_all_distinct(std::string&           str, const std::string& old_value,const std::string& new_value)     
@@ -616,11 +656,13 @@ std::string Conductor::sdp_rate_set(int rate, const std::string &sdp)
 	}
 	std::string s; 
 	std::stringstream ss;
-	ss<<"c=IN IP4 139.196.204.25\r\nb=AS:"<<rate<<"\r\n";
+	//ss<<"c=IN IP4 139.196.204.25\r\nb=AS:"<<rate<<"\r\n";
+	ss<<"c=IN IP4 192.168.8.109\r\nb=AS:"<<rate<<"\r\n";
 	std::string strtEST = ss.str();
 	//s = str( boost::format("c=IN IP4 139.196.204.25\r\nb=AS:%d\r\n") % rate ); 
 	//sprintf(sc, "c=IN IP4 139.196.204.25\r\nb=AS:%s\r\n", rate)
-	replace_all_distinct(s, std::string("c=IN IP4 139.196.204.25\r\n"), strtEST);
+	//replace_all_distinct(s, std::string("c=IN IP4 139.196.204.25\r\n"), strtEST);
+	replace_all_distinct(s, std::string("c=IN IP4 192.168.8.109\r\n"), strtEST);
 	return s;
 }
 void Conductor::createOffer(){
@@ -732,21 +774,46 @@ void Conductor::AddTracks() {
                       << result_or_error.error().message();
   }
 
-  rtc::scoped_refptr<CapturerTrackSource> video_device =
-      CapturerTrackSource::Create();
-  if (video_device) {
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
-        peer_connection_factory_->CreateVideoTrack(kVideoLabel, video_device));
-    main_wnd_->StartLocalRenderer(video_track_);
+  
+  
+  if(mode == 2) {
+  	
+  	rtc::scoped_refptr<FileCapturerTrackSource> file_video_device =
+      FileCapturerTrackSource::Create();
+	if(file_video_device){
+	    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
+	        peer_connection_factory_->CreateVideoTrack(kVideoLabel, file_video_device));
+	    main_wnd_->StartLocalRenderer(video_track_);
 
-    result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
-    if (!result_or_error.ok()) {
-      RTC_LOG(LS_ERROR) << "Failed to add video track to PeerConnection: "
-                        << result_or_error.error().message();
-    }
-  } else {
-    RTC_LOG(LS_ERROR) << "OpenVideoCaptureDevice failed";
+	    result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
+	    if (!result_or_error.ok()) {
+	      RTC_LOG(LS_ERROR) << "Failed to add video track to PeerConnection: "
+	                        << result_or_error.error().message();
+	    }
+	}
+	else {
+    	RTC_LOG(LS_ERROR) << "file OpenVideoCaptureDevice failed";
+  	}
+  	
   }
+  else{
+  	rtc::scoped_refptr<CapturerTrackSource> video_device =
+      CapturerTrackSource::Create();
+	if(video_device){
+	    rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
+	        peer_connection_factory_->CreateVideoTrack(kVideoLabel, video_device));
+	    main_wnd_->StartLocalRenderer(video_track_);
+
+	    result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
+	    if (!result_or_error.ok()) {
+	      RTC_LOG(LS_ERROR) << "Failed to add video track to PeerConnection: "
+	                        << result_or_error.error().message();
+    	}
+	}
+	else {
+    	RTC_LOG(LS_ERROR) << "OpenVideoCaptureDevice failed";
+  	}
+  } 
   std::cout << "go to SwitchToStreamingUI" << std::endl;
   main_wnd_->SwitchToStreamingUI1();
 }
@@ -840,7 +907,7 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
   }
 }
 
-void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {
+void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {//InternalCreateOffer或者InternalCreateAnswer success
   RTC_LOG(LS_ERROR) << "Conductor::OnSuccess";
   peer_connection_->SetLocalDescription(
       DummySetSessionDescriptionObserver::Create(), desc);

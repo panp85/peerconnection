@@ -114,6 +114,9 @@ class GtkMainWnd : public MainWindow {
   GtkWidget* server_edit_;
   GtkWidget* port_edit_;
   GtkWidget* peer_list_;  // The list of peers.
+
+  GtkWidget *combo;
+  
   MainWndCallback* callback_;
   std::string server_;
   std::string port_;

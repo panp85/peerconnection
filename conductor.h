@@ -50,7 +50,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool connection_active() const;
 
   void Close() override;
- 	void start(bool isp2p) override;
+  void start(int isp2p) override;
 
  protected:
   ~Conductor();
@@ -139,7 +139,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   std::deque<std::string*> pending_messages_;
   std::string server_;
 
-  
+  int mode;
   pthread_t hHandle;
   static void* janus_fun(void *callback);
   void OnReady_noId();

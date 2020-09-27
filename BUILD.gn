@@ -732,22 +732,34 @@ if (is_linux || is_win) {
         "peerconnection/client/janus/plugins/janus_plugin_echotest.cc",
         "peerconnection/client/janus/plugins/janus_plugin_streaming.cc",
         "peerconnection/client/janus/plugins/janus_plugin_videoroom.cc",
+        "peerconnection/client/media/common/fileCapturer.cc",
+        "peerconnection/client/media/common/ffmpeg-process.cc",
       ]
       cflags = [ "-Wno-deprecated-declarations",
       ]
       include_dirs = [ "./peerconnection/client/include",
                        "./peerconnection/client",
                        "./peerconnection/client/curl/usr/include",
+                       "/home/panpan/player/ffmpeg-demo/test/include",
+                       "./peerconnection/client/media/ffmpeg",
       ]
       ldflags = [
                  "-L../../examples/peerconnection/client/curl/usr/lib",
+                 "-L/home/panpan/player/ffmpeg-demo/test/lib",
+                 "-L../../examples/peerconnection/client/media/ffmpeg/build",
       ]
       libs = [
         "X11",
         "Xcomposite",
         "Xext",
         "Xrender",
-        "curl"
+        "curl",
+        #"avcodec",
+        #"avformat",
+        #"avutil",
+        #"swscale",
+        #"avfilter",
+        "ffmpeg-api",
       ]
       deps += [ "//build/config/linux/gtk" ]
     }
@@ -771,6 +783,7 @@ if (is_linux || is_win) {
       "../rtc_base:rtc_json",
       "../test:video_test_common",
       "//third_party/libyuv",
+      #"//third_party/ffmpeg",
     ]
   }
 

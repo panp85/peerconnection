@@ -1,0 +1,1 @@
+gcc rtsp2mp4_av.c -o rtsp2mp4_av -I/home/panpan/player/newest_ffmpeg/ffmpeg/test/include/ -L/home/panpan/player/newest_ffmpeg/ffmpeg/test/lib/ -lavformat -lavcodec -lswscale -lswresample -lavutil -lm -lz
