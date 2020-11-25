@@ -75,7 +75,10 @@ MainWnd::MainWnd(const char* server,
       edit2_(NULL),
       label1_(NULL),
       label2_(NULL),
-      button_(NULL),
+      source_select(NULL),
+      button_ori(NULL),
+      button_janus(NULL),
+      button_janus_p2p(NULL),
       listbox_(NULL),
       destroyed_(false),
       nested_msg_(NULL),
@@ -164,7 +167,7 @@ void MainWnd::SwitchToConnectUI() {
   ::SetFocus(edit1_);
 
   if (auto_connect_)
-    ::PostMessage(button_, BM_CLICK, 0, 0);
+    ::PostMessage(button_ori, BM_CLICK, 0, 0);
 }
 
 void MainWnd::SwitchToPeerList(const Peers& peers) {
@@ -193,6 +196,12 @@ void MainWnd::SwitchToPeerList(const Peers& peers) {
                       reinterpret_cast<LPARAM>(listbox_));
     }
   }
+}
+
+void MainWnd::SwitchToStreamingUI1() {
+  LayoutConnectUI(false);
+  LayoutPeerListUI(false);
+  ui_ = STREAMING;
 }
 
 void MainWnd::SwitchToStreamingUI() {
@@ -382,7 +391,7 @@ bool MainWnd::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT* result) {
       return true;
 
     case WM_COMMAND:
-      if (button_ == reinterpret_cast<HWND>(lp)) {
+      if (button_ori == reinterpret_cast<HWND>(lp)) {
         if (BN_CLICKED == HIWORD(wp))
           OnDefaultAction();
       } else if (listbox_ == reinterpret_cast<HWND>(lp)) {
@@ -480,10 +489,21 @@ void MainWnd::CreateChildWindows() {
   CreateChildWindow(&label2_, LABEL2_ID, L"Static", ES_CENTER | ES_READONLY, 0);
   CreateChildWindow(&edit2_, EDIT_ID, L"Edit",
                     ES_LEFT | ES_NOHIDESEL | WS_TABSTOP, WS_EX_CLIENTEDGE);
-  CreateChildWindow(&button_, BUTTON_ID, L"Button", BS_CENTER | WS_TABSTOP, 0);
+  
+  CreateChildWindow(&source_select, SELECT_SOURCE_ID, L"ComboBox", ES_CENTER|WS_CHILD |WS_VSCROLL | CBS_DROPDOWNLIST |WS_VISIBLE, 0);
+  
+  CreateChildWindow(&button_ori, BUTTON_ID, L"Button", BS_CENTER | WS_TABSTOP, 0);
+
+  CreateChildWindow(&button_janus, BUTTON_ID_JANUS, L"Button", BS_CENTER | WS_TABSTOP, 0);
+  CreateChildWindow(&button_janus_p2p, BUTTON_ID_JANUS_P2P, L"Button", BS_CENTER | WS_TABSTOP, 0);
 
   CreateChildWindow(&listbox_, LISTBOX_ID, L"ListBox",
                     LBS_HASSTRINGS | LBS_NOTIFY, WS_EX_CLIENTEDGE);
+
+  ::SendMessage(source_select , CB_ADDSTRING, 0, (LPARAM)L"local file");
+  ::SendMessage(source_select , CB_ADDSTRING, 0, (LPARAM)L"camera");
+
+  ::SendMessage(source_select , CB_SETCURSEL, 0, 0);
 
   ::SetWindowTextA(edit1_, server_.c_str());
   ::SetWindowTextA(edit2_, port_.c_str());
@@ -498,7 +518,10 @@ void MainWnd::LayoutConnectUI(bool show) {
   } windows[] = {
       {label1_, L"Server"},  {edit1_, L"XXXyyyYYYgggXXXyyyYYYggg"},
       {label2_, L":"},       {edit2_, L"XyXyX"},
-      {button_, L"Connect"},
+      {label2_, L"Source:"}, {source_select, L"local filexxxxxx"},
+      {button_ori, L"Connect"},
+      {button_janus, L"Connect_janus"},
+      {button_janus_p2p, L"Connect_janus_p2p"},
   };
 
   if (show) {

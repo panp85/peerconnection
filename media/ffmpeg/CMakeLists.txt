@@ -35,20 +35,20 @@ set(LIBRARY_DIR ${CMAKE_INSTALL_LIBDIR})
 set(INCLUDE_DIR include)
 
 #INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/includes)
-INCLUDE_DIRECTORIES("/home/panpan/player/ffmpeg-demo/test/include")
+INCLUDE_DIRECTORIES("/d/msys64/usr/local/ffmpeg/include")
 #add_subdirectory("../../../../../../../../ffmpeg-demo/test/lib")
-link_directories("/home/panpan/player/ffmpeg-demo/test/lib")
+link_directories("/d/msys64/usr/local/ffmpeg/bin")
 
 #INCLUDE_DIRECTORIES(${PROJECT_BINARY_DIR}/includes)
 #add_library(hal STATIC hal_main.c ${SOURCES} ${COMMON_SRCS} ${I2C_SRCS} ${SPI_SRCS} ${AD9361_SRCS} ${cal77s244_SRCS})
-#add_library(ffmpeg-api STATIC ffmpeg-api.c)
-add_library(ffmpeg-api SHARED ffmpeg-api.c)
+add_library(ffmpeg-api STATIC ffmpeg-api.c)
+#add_library(ffmpeg-api SHARED ffmpeg-api.c)
 
-target_link_libraries(ffmpeg-api avcodec
-        avformat
-        avutil
-	avfilter
-        swscale)
+target_link_libraries(ffmpeg-api avcodec.lib
+        avformat.lib
+        avutil.lib
+	    avfilter.lib
+        swscale.lib)
 
 #target_link_libraries(jysw_common config)
 install(TARGETS ffmpeg-api DESTINATION ${LIBRARY_DIR})

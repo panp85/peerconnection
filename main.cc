@@ -18,6 +18,10 @@
 #include "rtc_base/win32_socket_server.h"
 #include "system_wrappers/include/field_trial.h"
 #include "test/field_trial.h"
+#include <iostream>
+#include <fstream>
+#include <windows.h>
+
 
 int PASCAL wWinMain(HINSTANCE instance,
                     HINSTANCE prev_instance,
@@ -26,7 +30,35 @@ int PASCAL wWinMain(HINSTANCE instance,
   rtc::WinsockInitializer winsock_init;
   rtc::Win32SocketServer w32_ss;
   rtc::Win32Thread w32_thread(&w32_ss);
-  printf("ppt, in wWinMain, go to SetCurrentThread.\n");
+#if 0  
+  //freopen("debug\\in.txt","r",stdin); //输入重定向，输入数据将从in.txt文件中读取 
+  FILE *fp = freopen("d:/webrtc/webrtc.log","w",stdout); //输出重定向，输出数据将保存在out.txt文件中 
+  setvbuf( stdout, NULL, _IONBF, 0 );
+  setvbuf( fp, NULL, _IONBF, 0 );
+#endif
+#if 1
+  //static std::ofstream g_log("webrtc.log");
+  //std::cout.rdbuf(g_log.rdbuf());
+  
+  // 保存cout流缓冲区指针
+  std::streambuf* coutBuf = std::cout.rdbuf();
+  std::ofstream of("webrtc.log", std::ios::app);
+  // 获取文件out.txt流缓冲区指针
+  std::streambuf* fileBuf = of.rdbuf();
+  // 设置cout流缓冲区指针为out.txt的流缓冲区指针
+  std::cout.rdbuf(fileBuf);
+  //std::cout << std::unitbuf;
+  //of << std::unitbuf;
+  //setvbuf( stdout, NULL, _IONBF, 0 );
+  //fileBuf->pubsetbuf(NULL, 0);
+#endif
+  //std::ofstream of("webrtc.log");
+  std::cout << "ppt, in wWinMain, go to SetCurrentThread." << std::endl;
+  //of << "ppt, in wWinMain, go to SetCurrentThread 222." << std::endl;
+  //fflush(fp);
+  of.flush();
+
+  //while(1){Sleep(1000);}
   rtc::ThreadManager::Instance()->SetCurrentThread(&w32_thread);
 
   rtc::WindowsCommandLineArguments win_args;
@@ -81,6 +113,12 @@ int PASCAL wWinMain(HINSTANCE instance,
       }
     }
   }
+
+ //   of.flush();
+ //   of.close();
+	// 恢复cout原来的流缓冲区指针
+    std::cout.rdbuf(coutBuf);
+  //  std::cout << "Write Personal Information over..." << std::endl;
 
   rtc::CleanupSSL();
   return 0;

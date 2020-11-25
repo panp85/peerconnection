@@ -51,8 +51,8 @@ gboolean OnDestroyedCallback(GtkWidget* widget,
 void OnClickedCallback(GtkWidget* widget, gpointer data) {
   reinterpret_cast<GtkMainWnd*>(data)->OnClicked(widget);
 }
-void OnClickedCallback2(GtkWidget* widget, gpointer data) {
-  reinterpret_cast<GtkMainWnd*>(data)->OnClicked2(widget);
+void OnClickedCallback_p2p(GtkWidget* widget, gpointer data) {
+  reinterpret_cast<GtkMainWnd*>(data)->OnClicked_p2p(widget);
 }
 
 void source_change(GtkWidget* widget, gpointer data) {
@@ -360,12 +360,12 @@ void GtkMainWnd::SwitchToConnectUI() {
 
   GtkWidget* button2 = gtk_button_new_with_label("Connect(p2p)");
   gtk_widget_set_size_request(button2, 70, 30);
-  g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback2), this);
+  g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback_p2p), this);
   gtk_container_add(GTK_CONTAINER(hbox), button2);
 /*
   GtkWidget* button3 = gtk_button_new_with_label("Connect(file)");
 	gtk_widget_set_size_request(button3, 70, 30);
-	g_signal_connect(button3, "clicked", G_CALLBACK(OnClickedCallback2), this);
+	g_signal_connect(button3, "clicked", G_CALLBACK(OnClickedCallback_p2p), this);
 	gtk_container_add(GTK_CONTAINER(hbox), button3);
 */
 
@@ -455,7 +455,21 @@ void GtkMainWnd::SwitchToStreamingUI1() {
 
 
 void GtkMainWnd::SwitchToStreamingUI() {
-  QueueUIThreadCallback(10, NULL);
+  RTC_LOG(INFO) << __FUNCTION__;
+
+  RTC_DCHECK(draw_area_ == NULL);
+
+  gtk_container_set_border_width(GTK_CONTAINER(window_), 0);
+  if (peer_list_) {
+    gtk_widget_destroy(peer_list_);
+    peer_list_ = NULL;
+  }
+
+  draw_area_ = gtk_drawing_area_new();
+  gtk_container_add(GTK_CONTAINER(window_), draw_area_);
+  g_signal_connect(G_OBJECT(draw_area_), "draw", G_CALLBACK(&::Draw), this);
+
+  gtk_widget_show_all(window_);
 }
 
 void GtkMainWnd::OnDestroyed(GtkWidget* widget, GdkEvent* event) {
@@ -482,7 +496,7 @@ void GtkMainWnd::OnClicked(GtkWidget* widget) {
   callback_->start(0);
 }
 
-void GtkMainWnd::OnClicked2(GtkWidget* widget) {
+void GtkMainWnd::OnClicked_p2p(GtkWidget* widget) {
   // Make the connect button insensitive, so that it cannot be clicked more than
   // once.  Now that the connection includes auto-retry, it should not be
   // necessary to click it more than once.

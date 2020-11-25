@@ -35,7 +35,7 @@ namespace Janus {
     this->_protocol = protocol;
   }
 
-  std::shared_ptr<Protocol> PlatformImplImpl::protocol() {
+  std::shared_ptr<Protocol> PlatformImplImpl::get_protocol() {
     return this->_protocol;
   }
 

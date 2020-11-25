@@ -11,7 +11,7 @@
 #include "libavutil/opt.h"
 
 
-int ffmpeg_init(char *inputFileName);
+int ffmpeg_init(const char *inputFileName);
 int ffmpeg_av_read_frame(AVPacket *packet);
 
 int ffmpeg_get_buffer_fromCodec(AVPacket *packet, AVFrame *frame);

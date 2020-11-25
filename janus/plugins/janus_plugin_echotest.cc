@@ -5,7 +5,11 @@
 #include "janus/constraints.hpp"
 #include "janus/sdp_type.hpp"
 #include <iostream>
+#if defined(WEBRTC_LINUX)
 #include <unistd.h>
+#elif defined(WEBRTC_WIN)
+#include <windows.h>
+#endif
 
 namespace Janus {
 
@@ -66,7 +70,13 @@ namespace Janus {
 
     if(jsep != nullptr) {
 		std::cout << "JanusPluginEchotest::onEvent, setRemoteDescription.\n";
-		while(!this->_peer){usleep(100*1000);}
+		while(!this->_peer){
+			#if defined(WEBRTC_LINUX)
+			    usleep(100*1000);
+			#elif defined(WEBRTC_WIN)
+			    Sleep(100);
+			#endif
+		}
       this->_peer->setRemoteDescription(jsep->type(), jsep->sdp());
 
       return;

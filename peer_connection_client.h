@@ -225,10 +225,10 @@ public:
 		callback_->createOffer();
 	}
 	void onOffer(std::string& sdp){
-		_platformImpl->protocol()->onOffer(sdp, _bundle);
+		_platformImpl->get_protocol()->onOffer(sdp, _bundle);
 	}
 	void onAnswer(std::string& sdp){
-		_platformImpl->protocol()->onAnswer(sdp, _bundle);
+		_platformImpl->get_protocol()->onAnswer(sdp, _bundle);
 	}
 };
 

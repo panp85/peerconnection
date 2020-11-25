@@ -33,6 +33,7 @@ namespace Janus {
 
   class PluginCommandDelegate {
     public:
+     virtual ~PluginCommandDelegate(){}
       virtual void onCommandResult(const nlohmann::json& body, const std::shared_ptr<Bundle>& context) = 0;
       virtual void onPluginEvent(const std::shared_ptr<JanusEvent>& event, const std::shared_ptr<Bundle>& context) = 0;
   };

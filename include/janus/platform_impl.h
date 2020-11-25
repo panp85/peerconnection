@@ -20,7 +20,7 @@ namespace Janus {
 
   class PlatformImpl : public Platform {
     public:
-      virtual std::shared_ptr<Protocol> protocol() = 0;
+      virtual std::shared_ptr<Protocol> get_protocol() = 0;
       virtual std::shared_ptr<Plugin> plugin(const std::string& id, int64_t handleId, const std::shared_ptr<Protocol>& owner) = 0;
   };
 
@@ -29,7 +29,7 @@ namespace Janus {
       PlatformImplImpl(const std::shared_ptr<PeerFactory>& factory);
 
       void protocol(const std::shared_ptr<Protocol>& protocol);
-      std::shared_ptr<Protocol> protocol();
+      std::shared_ptr<Protocol> get_protocol();
 
       void pluginFactory(const std::string& id, const std::shared_ptr<PluginFactory>& factory);
       std::shared_ptr<Plugin> plugin(const std::string& id, int64_t handleId, const std::shared_ptr<Protocol>& owner);

@@ -16,11 +16,13 @@ namespace Janus {
 
   class Random {
     public:
+	  virtual ~Random(){}
       virtual std::string generate() = 0;
   };
 
   class RandomImpl : public Random {
     public:
+	virtual ~RandomImpl(){}
       std::string generate();
   };
 

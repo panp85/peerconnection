@@ -25,6 +25,7 @@ namespace Janus {
 
   class Async {
     public:
+	  virtual ~Async(){}
       virtual void submit(Task task) = 0;
   };
 

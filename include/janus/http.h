@@ -28,6 +28,7 @@ namespace Janus {
 
   class Http {
     public:
+	  virtual ~Http(){}
       virtual std::shared_ptr<HttpResponse> get(const std::string& path) = 0;
       virtual std::shared_ptr<HttpResponse> post(const std::string& path, const std::string& body="") = 0;
   };
@@ -49,6 +50,7 @@ namespace Janus {
 
   class HttpFactory {
     public:
+	  virtual ~HttpFactory(){}
       virtual std::shared_ptr<Http> create(const std::string& baseUrl) = 0;
   };
 

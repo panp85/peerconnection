@@ -42,4 +42,4 @@ namespace Janus {
       std::shared_ptr<PluginCommandDelegate> _delegate;
   };
 
-};
+}

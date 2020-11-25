@@ -95,6 +95,7 @@ class MainWnd : public MainWindow {
   virtual void SwitchToConnectUI();
   virtual void SwitchToPeerList(const Peers& peers);
   virtual void SwitchToStreamingUI();
+  virtual void SwitchToStreamingUI1();
   virtual void MessageBox(const char* caption, const char* text, bool is_error);
   virtual UI current_ui() { return ui_; }
 
@@ -156,6 +157,9 @@ class MainWnd : public MainWindow {
   enum ChildWindowID {
     EDIT_ID = 1,
     BUTTON_ID,
+    BUTTON_ID_JANUS,
+    BUTTON_ID_JANUS_P2P,
+    SELECT_SOURCE_ID,
     LABEL1_ID,
     LABEL2_ID,
     LISTBOX_ID,
@@ -193,7 +197,10 @@ class MainWnd : public MainWindow {
   HWND edit2_;
   HWND label1_;
   HWND label2_;
-  HWND button_;
+  HWND source_select;
+  HWND button_ori;
+  HWND button_janus;
+  HWND button_janus_p2p;
   HWND listbox_;
   bool destroyed_;
   void* nested_msg_;

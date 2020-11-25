@@ -17,7 +17,7 @@ namespace Janus {
       return;
     }
 
-    this->_protocol = this->_platform->protocol();
+    this->_protocol = this->_platform->get_protocol();
     this->_protocol->init(this->_conf, this->_platform, this->_delegate);
   }
 
@@ -39,7 +39,7 @@ namespace Janus {
   }
 
   void JanusImpl::dispatch(const std::string& command, const std::shared_ptr<Bundle>& payload) {
-    auto protocol = this->_platform->protocol();
+    auto protocol = this->_platform->get_protocol();
     protocol->dispatch(command, payload);
   }
 

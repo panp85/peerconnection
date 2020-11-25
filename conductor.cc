@@ -17,7 +17,11 @@
 #include <vector>
 #include <iostream>
 #include <thread>
+#if defined(WEBRTC_LINUX)
 #include <unistd.h>
+#elif defined(WEBRTC_WIN)
+#include <windows.h>
+#endif
 #include <sstream>
 
 
@@ -49,7 +53,7 @@
 #include "rtc_base/strings/json.h"
 #include "test/vcm_capturer.h"
 
-#include "media/common/fileCapturer.h"
+//#include "media/common/fileCapturer.h"
 
 namespace {
 // Names used for a IceCandidate JSON object.
@@ -110,7 +114,7 @@ class CapturerTrackSource : public webrtc::VideoTrackSource {
   }
   std::unique_ptr<webrtc::test::VcmCapturer> capturer_;
 };
-#if 1
+#if 0
 class FileCapturerTrackSource : public webrtc::VideoTrackSource {
  public:
   static rtc::scoped_refptr<FileCapturerTrackSource> Create() {
@@ -338,7 +342,7 @@ void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
 
 void Conductor::OnIceGatheringChange(
     webrtc::PeerConnectionInterface::IceGatheringState new_state) {
-    if(new_state != webrtc::PeerConnectionInterface::kIceConnectionCompleted) {
+    if(new_state != webrtc::PeerConnectionInterface::kIceGatheringComplete) {
       return;
     }
     client_->onIceCompleted();
@@ -532,7 +536,8 @@ void* Conductor::janus_fun(void *callback){
 	std::cout<<"janus_fun over.\n";
 	while(1){
 		std::cout<<"while Conductor::janus_fun.\n";
-		sleep(1000);
+		
+		//sleep(1000);
 	}
 }
 
@@ -607,7 +612,7 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		  return;
 		}
 		*/
-		webrtc::SdpType type;// = *type_maybe;
+		webrtc::SdpType type = webrtc::SdpType::kOffer;// = *type_maybe;
 		if(c_type == 0){
 			RTC_LOG(LS_ERROR) << "setRemoteDescription offer";
 			type = webrtc::SdpType::kOffer;
@@ -775,7 +780,7 @@ void Conductor::AddTracks() {
   }
 
   
-  
+/*  
   if(mode == 2) {
   	
   	rtc::scoped_refptr<FileCapturerTrackSource> file_video_device =
@@ -797,6 +802,7 @@ void Conductor::AddTracks() {
   	
   }
   else{
+*/
   	rtc::scoped_refptr<CapturerTrackSource> video_device =
       CapturerTrackSource::Create();
 	if(video_device){
@@ -813,7 +819,7 @@ void Conductor::AddTracks() {
 	else {
     	RTC_LOG(LS_ERROR) << "OpenVideoCaptureDevice failed";
   	}
-  } 
+//  } 
   std::cout << "go to SwitchToStreamingUI" << std::endl;
   main_wnd_->SwitchToStreamingUI1();
 }

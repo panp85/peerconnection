@@ -1,7 +1,9 @@
 #ifndef TEST_FFMPEG_H_
 #define TEST_FFMPEG_H_
 
-#include <unistd.h>
+//#if defined(WEBRTC_LINUX)
+//#include <unistd.h>
+//#endif
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -20,7 +22,7 @@ extern "C" {
 class FfmpegMediaProcess{
 public:
 	virtual ~FfmpegMediaProcess();
-	int init(char *inputFileName);
+	int init(std::string inputFileName);
 
 	void setVideoCallBack(rtc::VideoSinkInterface<webrtc::VideoFrame>* dataCallBack);
 

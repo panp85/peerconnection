@@ -4,7 +4,7 @@ AVCodecContext *dec_ctx;
 AVCodec *dec;
 AVFormatContext *fmt_ctx;
 
-int ffmpeg_init(char *inputFileName){
+int ffmpeg_init(const char *inputFileName){
 	int ret;
 	//AVFormatContext *fmt_ctx = *fmt_ctx_p;
 	

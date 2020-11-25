@@ -14,10 +14,14 @@
 #include "third_party/libyuv/include/libyuv.h"
 #include <iostream>
 
+#if defined(WEBRTC_WIN)
+#include <windows.h>
+#endif
+
 using namespace  webrtc;
 
-int FfmpegMediaProcess::init(char *inputFileName){
-	video_stream_index = ffmpeg_init(inputFileName);
+int FfmpegMediaProcess::init(std::string inputFileName){
+	video_stream_index = ffmpeg_init(inputFileName.c_str());
     return 0;
 }
 
@@ -62,7 +66,11 @@ void FfmpegMediaProcess::process(){
 	
 	while(running){
 		if ((ret = ffmpeg_av_read_frame(&packet)) < 0){
+			#if defined(WEBRTC_LINUX)
 			usleep(1000);
+			#elif defined(WEBRTC_WIN)
+			Sleep(1);
+			#endif
 			continue;
 		}
 		
@@ -115,7 +123,11 @@ void FfmpegMediaProcess::process(){
 			}
 			av_frame_unref(frame);
 		}
+		#if defined(WEBRTC_LINUX)
 		usleep(30*1000);
+		#elif defined(WEBRTC_WIN)
+		Sleep(30);
+		#endif
 		av_packet_unref(&packet);
 	}
 

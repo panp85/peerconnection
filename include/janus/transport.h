@@ -36,6 +36,7 @@ namespace Janus {
 
   class Transport {
     public:
+	  virtual ~Transport(){}
       virtual void sessionId(const std::string& id) = 0;
       virtual void close() = 0;
 
@@ -46,6 +47,7 @@ namespace Janus {
   class TransportImpl : public Transport {
     public:
       TransportImpl(const std::shared_ptr<TransportDelegate>& delegate, const std::shared_ptr<Async>& async);
+	  virtual ~TransportImpl(){}
       void sessionId(const std::string& id);
       void close();
 
@@ -93,11 +95,13 @@ namespace Janus {
 
   class TransportFactory {
     public:
+		virtual ~TransportFactory(){}
       virtual std::shared_ptr<Transport> create(const std::string& url, const std::shared_ptr<TransportDelegate>& delegate) = 0;
   };
 
   class TransportFactoryImpl : public TransportFactory {
     public:
+	  virtual ~TransportFactoryImpl(){}
       std::shared_ptr<Transport> create(const std::string& url, const std::shared_ptr<TransportDelegate>& delegate);
   };
 

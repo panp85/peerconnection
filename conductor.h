@@ -140,7 +140,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   std::string server_;
 
   int mode;
-  pthread_t hHandle;
+  //pthread_t hHandle;
   static void* janus_fun(void *callback);
   void OnReady_noId();
   void OnReady_Id();
