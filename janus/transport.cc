@@ -83,6 +83,10 @@ namespace Janus {
       }
 
       auto reply = kernel(path, client, this->shared_from_this());
+	  if(!reply){
+	  	std::cout << "HttpTransport::_sendAsync failed.\n" << std::endl;
+	  	return;
+	  }
       auto content = nlohmann::json::parse(reply->body());
       this->_delegate->onMessage(content, context);
 

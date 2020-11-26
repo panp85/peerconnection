@@ -21,6 +21,8 @@
 #include "api/peer_connection_interface.h"
 #include "examples/peerconnection/client/main_wnd.h"
 #include "examples/peerconnection/client/peer_connection_client.h"
+#include "examples/peerconnection/client/common.h"
+
 
 namespace webrtc {
 class VideoCaptureModule;
@@ -44,13 +46,17 @@ class Conductor : public webrtc::PeerConnectionObserver,
     ON_READY_NOID,
     ON_READY_WITHID,
   };
-
+  enum OFFER_TYPE{
+  	OFFER_ANSWER,
+	OFFER_OFFER,
+  };
+	
   Conductor(PeerConnectionClient* client, MainWindow* main_wnd);
 
   bool connection_active() const;
 
   void Close() override;
-  void start(int isp2p) override;
+  void connect2janusServer(bool isp2p) override;
 
  protected:
   ~Conductor();
@@ -129,7 +135,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   void SendMessage(const std::string& json_object);
 
   int64_t peer_id_;
-  int offer_type;
+  enum OFFER_TYPE offer_type;
   bool loopback_;
   rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
@@ -138,8 +144,9 @@ class Conductor : public webrtc::PeerConnectionObserver,
   MainWindow* main_wnd_;
   std::deque<std::string*> pending_messages_;
   std::string server_;
-
-  int mode;
+  
+  bool isp2p;
+  Media_Source_Type source_type;
   //pthread_t hHandle;
   static void* janus_fun(void *callback);
   void OnReady_noId();
@@ -148,6 +155,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
   void setbitrate();
   void replace_all_distinct(std::string& str, const std::string& old_value,const std::string& new_value);
   std::string sdp_rate_set(int rate, const std::string &sdp);
+
+  void setSourceType(enum Media_Source_Type type) override {source_type = type;}
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_

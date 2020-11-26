@@ -51,16 +51,24 @@ gboolean OnDestroyedCallback(GtkWidget* widget,
 void OnClickedCallback(GtkWidget* widget, gpointer data) {
   reinterpret_cast<GtkMainWnd*>(data)->OnClicked(widget);
 }
-void OnClickedCallback_p2p(GtkWidget* widget, gpointer data) {
-  reinterpret_cast<GtkMainWnd*>(data)->OnClicked_p2p(widget);
+
+void OnClickedCallback_janus(GtkWidget* widget, gpointer data) {
+  reinterpret_cast<GtkMainWnd*>(data)->OnClicked_janus(widget);
 }
 
+void OnClickedCallback_janus_p2p(GtkWidget* widget, gpointer data) {
+  reinterpret_cast<GtkMainWnd*>(data)->OnClicked_janus_p2p(widget);
+}
+
+
 void source_change(GtkWidget* widget, gpointer data) {
-/*
+
     if(data == 1){
         //gchar *ptr = gtk_entry_get_text(GTK_ENTRY(button));
         //printf("组合框A发生改变，内容是：%s\n",ptr);
-    }else if(data == 2) {
+    }
+	/*
+	else if(data == 2) {
         //gchar *ptr = gtk_entry_get_text(GTK_ENTRY(button));
         //printf("组合框A发生改变，内容是：%s\n",ptr);    
     }
@@ -358,17 +366,15 @@ void GtkMainWnd::SwitchToConnectUI() {
   g_signal_connect(button, "clicked", G_CALLBACK(OnClickedCallback), this);
   gtk_container_add(GTK_CONTAINER(hbox), button);
 
-  GtkWidget* button2 = gtk_button_new_with_label("Connect(p2p)");
+  GtkWidget* button2 = gtk_button_new_with_label("Connect_janus");
   gtk_widget_set_size_request(button2, 70, 30);
-  g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback_p2p), this);
+  g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback_janus), this);
   gtk_container_add(GTK_CONTAINER(hbox), button2);
-/*
-  GtkWidget* button3 = gtk_button_new_with_label("Connect(file)");
-	gtk_widget_set_size_request(button3, 70, 30);
-	g_signal_connect(button3, "clicked", G_CALLBACK(OnClickedCallback_p2p), this);
-	gtk_container_add(GTK_CONTAINER(hbox), button3);
-*/
 
+  GtkWidget* button2 = gtk_button_new_with_label("Connect_janus(p2p)");
+  gtk_widget_set_size_request(button2, 70, 30);
+  g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback_janus_p2p), this);
+  gtk_container_add(GTK_CONTAINER(hbox), button2);
 
   GtkWidget* halign = gtk_alignment_new(1, 0, 0, 0);
   gtk_container_add(GTK_CONTAINER(halign), hbox);
@@ -483,6 +489,32 @@ void GtkMainWnd::OnDestroyed(GtkWidget* widget, GdkEvent* event) {
   peer_list_ = NULL;
 }
 
+void GtkMainWnd::setMediaSource(){
+  GtkTreeIter   iter;
+  GtkTreeModel *model;
+  gchar *ptr = NULL;
+
+  /* Obtain currently selected item form combo box.
+   * If nothing is selected, do nothing. */
+  if( gtk_combo_box_get_active_iter( GTK_COMBO_BOX(combo), &iter ) )
+  {
+      /* Obtain data model from combo box. */
+      model = gtk_combo_box_get_model( GTK_COMBO_BOX(combo) );
+  
+      /* Obtain string from model. */
+      gtk_tree_model_get( model, &iter, 0, &ptr, -1);
+  }
+  
+  std::cout << "ppt, source: " << ptr <<  std::endl;
+  if(!strcmp(ptr, "camera")){
+  	callback->setSourceType(Media_Source_Type::SOURCE_HW);
+  }
+  else if(!strcmp(ptr, "files"){
+  	callback_->setSourceType(Media_Source_Type::SOURCE_FILE);
+  }
+  
+}
+
 
 void GtkMainWnd::OnClicked(GtkWidget* widget) {
   // Make the connect button insensitive, so that it cannot be clicked more than
@@ -492,11 +524,25 @@ void GtkMainWnd::OnClicked(GtkWidget* widget) {
   server_ = gtk_entry_get_text(GTK_ENTRY(server_edit_));
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
-  //callback_->StartLogin(server_, port); 
-  callback_->start(0);
+  callback_->StartLogin(server_, port); 
+  //callback_->connect2janusServer(0);
 }
 
-void GtkMainWnd::OnClicked_p2p(GtkWidget* widget) {
+void GtkMainWnd::OnClicked_janus(GtkWidget* widget) {
+  // Make the connect button insensitive, so that it cannot be clicked more than
+  // once.  Now that the connection includes auto-retry, it should not be
+  // necessary to click it more than once.
+  gtk_widget_set_sensitive(widget, false);
+  server_ = gtk_entry_get_text(GTK_ENTRY(server_edit_));
+  port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
+  int port = port_.length() ? atoi(port_.c_str()) : 0;
+  
+  callback_->connect2janusServer(false);
+
+}
+
+
+void GtkMainWnd::OnClicked_janus_p2p(GtkWidget* widget) {
   // Make the connect button insensitive, so that it cannot be clicked more than
   // once.  Now that the connection includes auto-retry, it should not be
   // necessary to click it more than once.
@@ -505,29 +551,33 @@ void GtkMainWnd::OnClicked_p2p(GtkWidget* widget) {
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
   //callback_->StartLogin(server_, port); 
+  #if 0
   GtkTreeIter   iter;
   GtkTreeModel *model;
   gchar *ptr = NULL;
 
-	/* Obtain currently selected item form combo box.
-	 * If nothing is selected, do nothing. */
-	if( gtk_combo_box_get_active_iter( GTK_COMBO_BOX(combo), &iter ) )
-	{
-	    /* Obtain data model from combo box. */
-	    model = gtk_combo_box_get_model( GTK_COMBO_BOX(combo) );
-
-	    /* Obtain string from model. */
-	    gtk_tree_model_get( model, &iter, 0, &ptr, -1 );
-	}
+  /* Obtain currently selected item form combo box.
+   * If nothing is selected, do nothing. */
+  if( gtk_combo_box_get_active_iter( GTK_COMBO_BOX(combo), &iter ) )
+  {
+      /* Obtain data model from combo box. */
+      model = gtk_combo_box_get_model( GTK_COMBO_BOX(combo) );
+  
+      /* Obtain string from model. */
+      gtk_tree_model_get( model, &iter, 0, &ptr, -1);
+  }
+  
   std::cout << "ppt, source: " << ptr <<  std::endl;
   if(!strcmp(ptr, "camera")){
-  	callback_->start(1);
+  	callback->setSourceType(SOURCE_HW);
   }
-  else{
-  	callback_->start(2);
+  else if(!strcmp(ptr, "files"){
+  	callback_->setSourceType(SOURCE_FILE);
   }
+  #endif
+  
+  callback_->connect2janusServer(true);
 }
-
 
 void GtkMainWnd::OnKeyPress(GtkWidget* widget, GdkEventKey* key) {
   if (key->type == GDK_KEY_PRESS) {

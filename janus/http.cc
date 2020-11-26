@@ -63,7 +63,7 @@ namespace Janus {
     if (status == CURLE_OK) {
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &status);
     }
-
+	else{return NULL;}
     curl_slist_free_all(headers);
     curl_easy_cleanup(handle);
 

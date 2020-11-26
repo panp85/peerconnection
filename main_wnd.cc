@@ -356,6 +356,18 @@ void MainWnd::OnDefaultAction() {
         callback_->ConnectToPeer(peer_id);
       }
     }
+  }else if (ui_ == CONNECT_TO_JANUSSERVER) {
+    //std::string server(GetWindowText(edit1_));
+    //std::string port_str(GetWindowText(edit2_));
+    //int port = port_str.length() ? atoi(port_str.c_str()) : 0;
+    //callback_->StartLogin(server, port);
+    callback_->connect2janusServer(false);
+  }else if (ui_ == CONNECT_TO_JANUSSERVER_P2P) {
+    //std::string server(GetWindowText(edit1_));
+    //std::string port_str(GetWindowText(edit2_));
+    //int port = port_str.length() ? atoi(port_str.c_str()) : 0;
+    //callback_->StartLogin(server, port);
+    callback_->connect2janusServer(true);
   } else {
     MessageBoxA(wnd_, "OK!", "Yeah", MB_OK);
   }
@@ -398,6 +410,16 @@ bool MainWnd::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT* result) {
       } else if (listbox_ == reinterpret_cast<HWND>(lp)) {
         if (LBN_DBLCLK == HIWORD(wp)) {
           OnDefaultAction();
+        }
+      } else if (button_janus == reinterpret_cast<HWND>(lp)) {
+        if (BN_CLICKED == HIWORD(wp)){
+		  ui_ = CONNECT_TO_JANUSSERVER;
+          OnDefaultAction();
+        }
+      } else if (button_janus_p2p == reinterpret_cast<HWND>(lp)) {
+        if (BN_CLICKED == HIWORD(wp)) {
+          OnDefaultAction();
+		  ui_ = CONNECT_TO_JANUSSERVER_P2P;
         }
       }
       return true;

@@ -218,8 +218,8 @@ namespace Janus {
 	
 	if(header == "_new_peer"){
 		int64_t peer_id = message.value("data", nlohmann::json::object()).value("peer_id", (int64_t) 0);
-		
-		this->_delegate->onReady_withId(peer_id, 0);//
+		#define OFFER_ANSWER 0
+		this->_delegate->onReady_withId(peer_id, OFFER_ANSWER);//本机是answer
 		return;
 	}
 
@@ -242,7 +242,8 @@ namespace Janus {
 	  		std::string peer = peers.substr(0, index);
 			int64_t peer_id = std::stoll(peer);
 			std::cout << "ppt, peer:" + peer + ", go to onReady janusApi, to int64: " << peer_id << std::endl;	
-			this->_delegate->onReady_withId(peer_id, 1);//创建peerconnection等webrtc相关内容
+			#define OFFER_OFFER 1
+			this->_delegate->onReady_withId(peer_id, OFFER_OFFER);//创建peerconnection等webrtc相关内容，本机是offer
 	  	}
 		else{
 			std::cout << "no peers" << std::endl;

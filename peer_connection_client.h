@@ -133,7 +133,7 @@ class PeerConnectionClient : public sigslot::has_slots<>,
   void Connect(const std::string& server,
                int port,
                const std::string& client_name);
-  void Start(int mode);//0:janus-camera; 1:camera-p2p; 2:file-p2p; 3:
+  void Connect2janusServer(bool isp2p);//0:janus-camera; 1:camera-p2p; 2:file-p2p; 3:
   
   void onIceCompleted();
   void onIceCandidate(const std::string& mid, int32_t index, const std::string& sdp);

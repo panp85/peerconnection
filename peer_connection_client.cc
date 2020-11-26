@@ -128,14 +128,13 @@ void PeerConnectionClient::onIceCandidate(const std::string& mid, int32_t index,
 	_factory->c_owner->onIceCandidate(mid, index, sdp, _factory->c_id, _bundle->getInt("peer_id", -1));
 }
 
-void PeerConnectionClient::Start(int mode) {
+void PeerConnectionClient::Connect2janusServer(bool isp2p) {//1: is p2p; 0: not p2p
     //std::shared_ptr<PeerFactory> _peerFactory;
-    std::cout<<"PeerConnectionClient::Start\n";
+    std::cout<<"PeerConnectionClient::Connect2janusServer\n";
     _conf = std::make_shared<Janus::JanusProxyConf>();
-	if(!mode)
-		_conf->isp2p = false;
-	else
-		_conf->isp2p = true;
+	
+	_conf->isp2p = isp2p;
+	
 	_factory = std::make_shared<JanusPeerFactory>();
     _platformImpl = std::make_shared<Janus::PlatformImplImpl>(_factory);
 	_delegate = std::make_shared<JanusProxyProtocolDelegate>();

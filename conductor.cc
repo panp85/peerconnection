@@ -55,6 +55,8 @@
 
 #include "media/common/fileCapturer.h"
 
+#include "common.h"
+
 namespace {
 // Names used for a IceCandidate JSON object.
 const char kCandidateSdpMidName[] = "sdpMid";
@@ -154,7 +156,7 @@ class FileCapturerTrackSource : public webrtc::VideoTrackSource {
 }  // namespace
 
 Conductor::Conductor(PeerConnectionClient* client, MainWindow* main_wnd)
-    : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd) {
+    : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd),isp2p(false), source_type(Media_Source_Type::SOURCE_NULL) {
   client_->RegisterObserver(this);
   main_wnd->RegisterObserver(this);
 }
@@ -543,11 +545,11 @@ void* Conductor::janus_fun(void *callback){
 	}
 }
 
-void Conductor::start(int mode){
+void Conductor::connect2janusServer(bool isp2p){
 	//std::thread thread1(janus_fun, std::ref(client_));
 	//pthread_create(&hHandle, NULL, janus_fun, (void *)client_);	   //create a thread;
-	this->mode = mode;
-	client_->Start(mode);
+	this->isp2p = isp2p;
+	client_->Connect2janusServer(isp2p);
 }
 
 void Conductor::replace_all_distinct(std::string&           str, const std::string& old_value,const std::string& new_value)     
@@ -735,10 +737,10 @@ void Conductor::OnReady_Id() {
 	//while(1){sleep(1);}
     //peer_id_ = id;
     std::string cmd;
-    if(offer_type){
+    if(offer_type == OFFER_OFFER){
 		cmd = std::string("13Q3wnLuN7");//JanusCommands::CALL
   	}
-	else
+	else if(offer_type == OFFER_ANSWER)
 	{
 		cmd = std::string("CALL_ANSWER");//JanusCommands::CALL
 	}
@@ -760,7 +762,12 @@ void Conductor::OnReady() {
 
 void Conductor::OnReady_withId(int64_t id, int offer) {
   peer_id_ = id;
-  offer_type = offer;
+  if(!offer){
+  	offer_type = OFFER_ANSWER;
+  }
+  else{
+  	offer_type = OFFER_OFFER;
+  }
   main_wnd_->QueueUIThreadCallback(ON_READY_WITHID, NULL);
 }
 
@@ -780,9 +787,8 @@ void Conductor::AddTracks() {
     RTC_LOG(LS_ERROR) << "Failed to add audio track to PeerConnection: "
                       << result_or_error.error().message();
   }
- 
-  if(mode == 2) {
-  	
+
+  if(source_type == Media_Source_Type::SOURCE_FILE) {
   	rtc::scoped_refptr<FileCapturerTrackSource> file_video_device =
       FileCapturerTrackSource::Create();
 	if(file_video_device){
@@ -801,7 +807,7 @@ void Conductor::AddTracks() {
   	}
   	
   }
-  else{
+  else if(source_type == Media_Source_Type::SOURCE_HW){
   	rtc::scoped_refptr<CapturerTrackSource> video_device =
       CapturerTrackSource::Create();
 	if(video_device){
@@ -937,13 +943,17 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {//Internal
   jmessage[kSessionDescriptionTypeName] =
       webrtc::SdpTypeToString(desc->GetType());
   jmessage[kSessionDescriptionSdpName] = sdp;
-  //SendMessage(writer.write(jmessage));
-  if(!strcmp(webrtc::SdpTypeToString(desc->GetType()), "offer")){
-  	RTC_LOG(LS_ERROR) << "is offer";
-  	client_->onOffer(sdp);
-  }else{
-  	RTC_LOG(LS_ERROR) << "is answer";
-  	client_->onAnswer(sdp);
+  if(0){
+  	SendMessage(writer.write(jmessage));
+  }
+  else{
+    if(!strcmp(webrtc::SdpTypeToString(desc->GetType()), "offer")){
+    	RTC_LOG(LS_ERROR) << "is offer";
+    	client_->onOffer(sdp);
+    }else{
+    	RTC_LOG(LS_ERROR) << "is answer";
+    	client_->onAnswer(sdp);
+    }
   }
 }
 

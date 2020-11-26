@@ -56,7 +56,7 @@ int PASCAL wWinMain(HINSTANCE instance,
   std::cout << "ppt, in wWinMain, go to SetCurrentThread." << std::endl;
   //of << "ppt, in wWinMain, go to SetCurrentThread 222." << std::endl;
   //fflush(fp);
-  of.flush();
+  //of.flush();
 
   //while(1){Sleep(1000);}
   rtc::ThreadManager::Instance()->SetCurrentThread(&w32_thread);
@@ -113,13 +113,13 @@ int PASCAL wWinMain(HINSTANCE instance,
       }
     }
   }
-
- //   of.flush();
- //   of.close();
+  std::cout << "ppt, in exit.\n" << std::endl;
+  of.flush();
+  of.close();
 	// 恢复cout原来的流缓冲区指针
     std::cout.rdbuf(coutBuf);
   //  std::cout << "Write Personal Information over..." << std::endl;
-
+  
   rtc::CleanupSSL();
   return 0;
 }

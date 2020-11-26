@@ -55,6 +55,8 @@ class GtkMainWnd : public MainWindow {
   virtual void QueueUIThreadCallback(int msg_id, void* data);
   virtual void SwitchToStreamingUI1();
 
+  virtual void setSourceType(enum Media_Source_Type type);
+
   // Creates and shows the main window with the |Connect UI| enabled.
   bool Create();
 
@@ -67,8 +69,9 @@ class GtkMainWnd : public MainWindow {
 
   // Callback for when the user clicks the "Connect" button.
   void OnClicked(GtkWidget* widget);
-  void OnClicked_p2p(GtkWidget* widget);
-
+  void OnClicked_janus(GtkWidget* widget);
+  void OnClicked_janus_p2p(GtkWidget* widget);
+  void setMediaSource();
   // Callback for keystrokes.  Used to capture Esc and Return.
   void OnKeyPress(GtkWidget* widget, GdkEventKey* key);
 

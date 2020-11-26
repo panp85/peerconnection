@@ -20,9 +20,12 @@
 #include "examples/peerconnection/client/peer_connection_client.h"
 #include "media/base/media_channel.h"
 #include "media/base/video_common.h"
+
 #if defined(WEBRTC_WIN)
 #include "rtc_base/win32.h"
 #endif  // WEBRTC_WIN
+#include "examples/peerconnection/client/common.h"
+
 
 class MainWndCallback {
  public:
@@ -32,7 +35,8 @@ class MainWndCallback {
   virtual void DisconnectFromCurrentPeer() = 0;
   virtual void UIThreadCallback(int msg_id, void* data) = 0;
   virtual void Close() = 0;
-  virtual void start(int isp2p) = 0;
+  virtual void connect2janusServer(bool isp2p) = 0;
+ virtual void setSourceType(enum Media_Source_Type type) = 0;
 
  protected:
   virtual ~MainWndCallback() {}
@@ -47,6 +51,9 @@ class MainWindow {
     CONNECT_TO_SERVER,
     LIST_PEERS,
     STREAMING,
+
+	CONNECT_TO_JANUSSERVER,
+	CONNECT_TO_JANUSSERVER_P2P,
   };
 
   virtual void RegisterObserver(MainWndCallback* callback) = 0;
