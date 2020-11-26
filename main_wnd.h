@@ -162,6 +162,7 @@ class MainWnd : public MainWindow {
     SELECT_SOURCE_ID,
     LABEL1_ID,
     LABEL2_ID,
+    LABEL3_ID,
     LISTBOX_ID,
   };
 
@@ -197,6 +198,7 @@ class MainWnd : public MainWindow {
   HWND edit2_;
   HWND label1_;
   HWND label2_;
+  HWND label3_;
   HWND source_select;
   HWND button_ori;
   HWND button_janus;

@@ -75,6 +75,7 @@ MainWnd::MainWnd(const char* server,
       edit2_(NULL),
       label1_(NULL),
       label2_(NULL),
+      label3_(NULL),
       source_select(NULL),
       button_ori(NULL),
       button_janus(NULL),
@@ -489,6 +490,8 @@ void MainWnd::CreateChildWindows() {
   CreateChildWindow(&label2_, LABEL2_ID, L"Static", ES_CENTER | ES_READONLY, 0);
   CreateChildWindow(&edit2_, EDIT_ID, L"Edit",
                     ES_LEFT | ES_NOHIDESEL | WS_TABSTOP, WS_EX_CLIENTEDGE);
+
+  CreateChildWindow(&label3_, LABEL3_ID, L"Static", ES_CENTER | ES_READONLY, 0);
   
   CreateChildWindow(&source_select, SELECT_SOURCE_ID, L"ComboBox", ES_CENTER|WS_CHILD |WS_VSCROLL | CBS_DROPDOWNLIST |WS_VISIBLE, 0);
   
@@ -518,7 +521,7 @@ void MainWnd::LayoutConnectUI(bool show) {
   } windows[] = {
       {label1_, L"Server"},  {edit1_, L"XXXyyyYYYgggXXXyyyYYYggg"},
       {label2_, L":"},       {edit2_, L"XyXyX"},
-      {label2_, L"Source:"}, {source_select, L"local filexxxxxx"},
+      {label3_, L"Source:"}, {source_select, L"local filexxxxxx"},
       {button_ori, L"Connect"},
       {button_janus, L"Connect_janus"},
       {button_janus_p2p, L"Connect_janus_p2p"},
