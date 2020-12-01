@@ -55,7 +55,7 @@ class GtkMainWnd : public MainWindow {
   virtual void QueueUIThreadCallback(int msg_id, void* data);
   virtual void SwitchToStreamingUI1();
 
-  virtual void setSourceType(enum Media_Source_Type type);
+  //virtual void setSourceType(enum Media_Source_Type type);
 
   // Creates and shows the main window with the |Connect UI| enabled.
   bool Create();

@@ -7,6 +7,14 @@ enum class Media_Source_Type{
   SOURCE_HW,
 };
   
+#if defined(WEBRTC_LINUX)
+#define MSLEEP(x) usleep(x*1000)
+#elif defined(WEBRTC_WIN)
+#include <windows.h>
+#include <unistd.h>
+#define MSLEEP(x) Sleep(x)
+#endif
+
 
 #endif
 

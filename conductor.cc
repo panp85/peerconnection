@@ -20,6 +20,7 @@
 #if defined(WEBRTC_LINUX)
 #include <unistd.h>
 #elif defined(WEBRTC_WIN)
+#include <io.h>
 #include <windows.h>
 #endif
 #include <sstream>
@@ -55,7 +56,6 @@
 
 #include "media/common/fileCapturer.h"
 
-#include <io.h> 
 
 #include "common.h"
 
@@ -89,11 +89,16 @@ class FileLog : public rtc::LogSink {
     
     inline size_t Size()
     {
+    #if 0
       size_t size = 0;
       if (logfile_ != NULL) {
         size = filelength(fileno(logfile_));
       }
       return size;
+    #endif
+	    if (logfile_==NULL) return -1;
+	    fseek(logfile_, 0L, SEEK_END);
+	    return ftell(logfile_);
     }
   
     inline void Start(void)
@@ -613,8 +618,9 @@ void Conductor::addIceCandidate(std::string& sdp_mid, int sdp_mlineindex, std::s
       return;
     }
 	RTC_LOG(INFO) << " candidate ok";
-	if(!peer_connection_.get()){
+	while(!peer_connection_.get()){
 		RTC_LOG(INFO) << "peer_connection_ failed";
+		MSLEEP(100);
 	}
     if (!peer_connection_->AddIceCandidate(candidate.get())) {
       RTC_LOG(WARNING) << "Failed to apply the received candidate";

@@ -49,7 +49,7 @@ bool FileCapturer::Init(size_t width,
   RTC_CHECK(vcm_->CaptureStarted());
 #endif
   ffmpegMediaProcess = FfmpegMediaProcess::Create();
-  ffmpegMediaProcess->init("1.flv");
+  ffmpegMediaProcess->init("1.mp4");
   ffmpegMediaProcess->setVideoCallBack(this);
   ffmpegMediaProcess->start();
   

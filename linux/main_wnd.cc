@@ -62,12 +62,13 @@ void OnClickedCallback_janus_p2p(GtkWidget* widget, gpointer data) {
 
 
 void source_change(GtkWidget* widget, gpointer data) {
+	/*
 
     if(data == 1){
         //gchar *ptr = gtk_entry_get_text(GTK_ENTRY(button));
         //printf("组合框A发生改变，内容是：%s\n",ptr);
     }
-	/*
+	
 	else if(data == 2) {
         //gchar *ptr = gtk_entry_get_text(GTK_ENTRY(button));
         //printf("组合框A发生改变，内容是：%s\n",ptr);    
@@ -371,10 +372,10 @@ void GtkMainWnd::SwitchToConnectUI() {
   g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback_janus), this);
   gtk_container_add(GTK_CONTAINER(hbox), button2);
 
-  GtkWidget* button2 = gtk_button_new_with_label("Connect_janus(p2p)");
-  gtk_widget_set_size_request(button2, 70, 30);
-  g_signal_connect(button2, "clicked", G_CALLBACK(OnClickedCallback_janus_p2p), this);
-  gtk_container_add(GTK_CONTAINER(hbox), button2);
+  GtkWidget* button3 = gtk_button_new_with_label("Connect_janus(p2p)");
+  gtk_widget_set_size_request(button3, 70, 30);
+  g_signal_connect(button3, "clicked", G_CALLBACK(OnClickedCallback_janus_p2p), this);
+  gtk_container_add(GTK_CONTAINER(hbox), button3);
 
   GtkWidget* halign = gtk_alignment_new(1, 0, 0, 0);
   gtk_container_add(GTK_CONTAINER(halign), hbox);
@@ -507,9 +508,9 @@ void GtkMainWnd::setMediaSource(){
   
   std::cout << "ppt, source: " << ptr <<  std::endl;
   if(!strcmp(ptr, "camera")){
-  	callback->setSourceType(Media_Source_Type::SOURCE_HW);
+  	callback_->setSourceType(Media_Source_Type::SOURCE_HW);
   }
-  else if(!strcmp(ptr, "files"){
+  else if(!strcmp(ptr, "files")){
   	callback_->setSourceType(Media_Source_Type::SOURCE_FILE);
   }
   
