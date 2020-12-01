@@ -154,6 +154,8 @@ namespace Janus {
       auto sdpMLineIndex = payload->getInt("sdpMLineIndex", -1);
       auto candidate = payload->getString("candidate", "");
 	  auto peer_id = payload->getInt("peer_id", -1);
+	  
+	  std::cout << "ppt, send JanusCommands::TRICKLE, peer_id:" << peer_id << std::endl; 
 
       auto msg = Messages::trickle(transaction, handleId, sdpMid, sdpMLineIndex, candidate, peer_id);
       this->_transport->send(msg, payload);
@@ -219,6 +221,7 @@ namespace Janus {
 	if(header == "_new_peer"){
 		int64_t peer_id = message.value("data", nlohmann::json::object()).value("peer_id", (int64_t) 0);
 		#define OFFER_ANSWER 0
+		std::cout << "ppt, _new_peer:" << peer_id << std::endl;	
 		this->_delegate->onReady_withId(peer_id, OFFER_ANSWER);//本机是answer
 		return;
 	}
@@ -231,7 +234,7 @@ namespace Janus {
       this->_plugin = this->_platform->plugin(pluginId, this->_handleId, this->shared_from_this());
 
       this->readyState(ReadyState::READY);
-	  std::cout << "ppt, go to onReady janusApi" << std::endl;
+	  std::cout << "ppt, janusApi, go to onReady." << std::endl;
 	  if(!isp2p){
       	this->_delegate->onReady();
 	  }

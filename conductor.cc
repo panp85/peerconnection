@@ -55,9 +55,116 @@
 
 #include "media/common/fileCapturer.h"
 
+#include <io.h> 
+
 #include "common.h"
 
 namespace {
+using namespace std;
+
+class FileLog : public rtc::LogSink {
+  
+  public:
+    FileLog(const std::string& LogPath)
+      :logfile_(NULL),
+      log_path_(LogPath){}
+    
+    virtual ~FileLog() {
+      if (logfile_) {
+        fclose(logfile_);
+        logfile_ = NULL;
+      }
+    }
+  
+    inline void FileDate() {
+      //QString timeString = QDateTime::currentDateTime().toString("yyyy-MM-dd_hhmmss");
+      time_t now = time(0);
+      //char* dt = ctime(&now);
+	  tm *ltm = localtime(&now);
+      //logfileName_ = log_path_+"/webrtc_"+timeString.toStdString()+".log";
+      logfileName_ = log_path_+"/webrtc_"+
+      	to_string(1900 + ltm->tm_year)+"_"+to_string(1 + ltm->tm_mon)+"_"+to_string(ltm->tm_mday)+"_"+
+      	to_string(ltm->tm_hour)+"_"+to_string(ltm->tm_min)+"_"+to_string(ltm->tm_sec)+".log";
+    }
+    
+    inline size_t Size()
+    {
+      size_t size = 0;
+      if (logfile_ != NULL) {
+        size = filelength(fileno(logfile_));
+      }
+      return size;
+    }
+  
+    inline void Start(void)
+    {
+      #define MAX_LOG_FILE_SIZE (1024*1024)
+      
+      if (NULL == logfile_) {
+        FileDate();
+        logfile_ = fopen(logfileName_.c_str(), "w");
+	  	if(!logfile_){
+	  		cout << "log fopen failed: " << logfileName_.c_str() << endl; 
+	  	}
+		else{
+			cout << "log fopen success: " << logfileName_.c_str() << endl; 
+		}
+      }
+      else if (Size() > MAX_LOG_FILE_SIZE)
+      {
+        Close();
+        FileDate();
+        logfile_ = fopen(logfileName_.c_str(), "w");
+      }
+    }
+  
+    inline void Close(void)
+    {
+      if(logfile_) {
+        fclose(logfile_);
+        logfile_ = NULL;
+      }
+    }
+ 
+    virtual void OnLogMessage(const std::string& message) {
+      rtc::CritScope lock(&log_crit_);
+      Start();
+      
+      if (NULL == logfile_)
+        return;
+ 
+      //QString timeString = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
+      string msgString;
+      //msgString = timeString.toStdString() + message;
+	  // 基于当前系统的当前日期/时间
+   		time_t now = time(0);
+	   // 把 now 转换为字符串形式
+	   //char* dt = ctime(&now);
+	   //msgString = string(dt) + message;
+	   tm *ltm = localtime(&now);
+	   msgString = to_string(1900 + ltm->tm_year)+"_"+to_string(1 + ltm->tm_mon)+"_"+to_string(ltm->tm_mday)+"_"+
+      	to_string(ltm->tm_hour)+"_"+to_string(ltm->tm_min)+"_"+to_string(ltm->tm_sec) + " " + message;
+      if(fwrite(msgString.c_str(), 1, msgString.length(), logfile_) < 0) {
+	  	cout << "Open file failed.\n" << endl;
+        Close();
+      } else if(fflush(logfile_) < 0) {
+        Close();
+      }
+    }
+  
+  private:
+    
+    FILE* logfile_;
+    const std::string log_path_;
+    std::string logfileName_;
+ 
+ 
+    rtc::CriticalSection log_crit_;
+  };
+
+
+
+
 // Names used for a IceCandidate JSON object.
 const char kCandidateSdpMidName[] = "sdpMid";
 const char kCandidateSdpMlineIndexName[] = "sdpMLineIndex";
@@ -66,6 +173,7 @@ const char kCandidateSdpName[] = "candidate";
 // Names used for a SessionDescription JSON object.
 const char kSessionDescriptionTypeName[] = "type";
 const char kSessionDescriptionSdpName[] = "sdp";
+
 
 class DummySetSessionDescriptionObserver
     : public webrtc::SetSessionDescriptionObserver {
@@ -157,6 +265,9 @@ class FileCapturerTrackSource : public webrtc::VideoTrackSource {
 
 Conductor::Conductor(PeerConnectionClient* client, MainWindow* main_wnd)
     : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd),isp2p(false), source_type(Media_Source_Type::SOURCE_NULL) {
+  FileLog* _LogStream = new FileLog("logs");
+  rtc::LogMessage::AddLogToStream(_LogStream, rtc::LS_INFO); //1: error,rtc::LS_ERROR; 2: warning,rtc::LS_WARNING 3: rtc::LS_INFO info
+  
   client_->RegisterObserver(this);
   main_wnd->RegisterObserver(this);
 }
@@ -663,15 +774,23 @@ std::string Conductor::sdp_rate_set(int rate, const std::string &sdp)
 	if(rate == -1){
 		return sdp;
 	}
-	std::string s; 
+	std::string s = sdp; 
 	std::stringstream ss;
 	//ss<<"c=IN IP4 139.196.204.25\r\nb=AS:"<<rate<<"\r\n";
-	ss<<"c=IN IP4 192.168.8.109\r\nb=AS:"<<rate<<"\r\n";
+	//ss<<"c=IN IP4 192.168.8.109\r\nb=AS:"<<rate<<"\r\n";//201201,by pp
+	ss<<"b=AS:"<<rate<<"\r\n";//201201,add by pp
 	std::string strtEST = ss.str();
 	//s = str( boost::format("c=IN IP4 139.196.204.25\r\nb=AS:%d\r\n") % rate ); 
 	//sprintf(sc, "c=IN IP4 139.196.204.25\r\nb=AS:%s\r\n", rate)
 	//replace_all_distinct(s, std::string("c=IN IP4 139.196.204.25\r\n"), strtEST);
-	replace_all_distinct(s, std::string("c=IN IP4 192.168.8.109\r\n"), strtEST);
+	replace_all_distinct(s, std::string("c=IN IP4 192.168.8.109\r\n"), strtEST);    //201201,by pp
+	std::string::size_type pos = 0;
+    if(   (pos = s.find("c=IN IP4",pos)) != std::string::npos){
+		int next_line_pos = s.find("\r\n", pos);
+		s.insert(next_line_pos+2, strtEST);
+        //str.replace(pos,old_value.length(),new_value);     
+    }
+	
 	return s;
 }
 void Conductor::createOffer(){
@@ -732,8 +851,10 @@ void Conductor::OnReady_Id() {
     return;
   }
   RTC_LOG(LS_ERROR) << "ppt, Conductor::OnReady_Id.";
+   
   if (InitializePeerConnection()) {
   	RTC_LOG(LS_ERROR) << "InitializePeerConnection ok.";
+	std::cout << "ppt, InitializePeerConnection ok." << std::endl;
 	//while(1){sleep(1);}
     //peer_id_ = id;
     std::string cmd;
@@ -788,7 +909,7 @@ void Conductor::AddTracks() {
                       << result_or_error.error().message();
   }
 
-  if(source_type == Media_Source_Type::SOURCE_FILE) {
+  if(1/*source_type == Media_Source_Type::SOURCE_FILE*/) {
   	rtc::scoped_refptr<FileCapturerTrackSource> file_video_device =
       FileCapturerTrackSource::Create();
 	if(file_video_device){
@@ -807,7 +928,7 @@ void Conductor::AddTracks() {
   	}
   	
   }
-  else if(source_type == Media_Source_Type::SOURCE_HW){
+  else if(0/*source_type == Media_Source_Type::SOURCE_HW*/){
   	rtc::scoped_refptr<CapturerTrackSource> video_device =
       CapturerTrackSource::Create();
 	if(video_device){

@@ -11,10 +11,10 @@
 #include "libavutil/opt.h"
 
 
-int ffmpeg_init(const char *inputFileName);
-int ffmpeg_av_read_frame(AVPacket *packet);
+__declspec(dllexport) int ffmpeg_init(const char *inputFileName);
+__declspec(dllexport) int ffmpeg_av_read_frame(AVPacket *packet);
 
-int ffmpeg_get_buffer_fromCodec(AVPacket *packet, AVFrame *frame);
+__declspec(dllexport) int ffmpeg_get_buffer_fromCodec(AVPacket *packet, AVFrame *frame);
 
 #endif
 

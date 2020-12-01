@@ -18,7 +18,7 @@ extern "C" {
 #include "api/video/video_sink_interface.h"
 #include "modules/include/module.h"
 #include "modules/video_capture/video_capture_defines.h"
-
+//api-ms-win-core-synch-l1-2-1.dll
 class FfmpegMediaProcess{
 public:
 	virtual ~FfmpegMediaProcess();
@@ -33,10 +33,19 @@ public:
 
 	void start();
 	void stop();
-
+	#if 0
+	int ffmpeg_init(const char *inputFileName);
+	int ffmpeg_av_read_frame(AVPacket *packet);
+	
+	int ffmpeg_get_buffer_fromCodec(AVPacket *packet, AVFrame *frame);
+	#endif
 	rtc::VideoSinkInterface<webrtc::VideoFrame>* _dataCallBack;
 
 	
+
+	AVCodecContext* dec_ctx;
+	AVCodec* dec;
+	AVFormatContext* fmt_ctx;
 	
 	int video_stream_index;
 
