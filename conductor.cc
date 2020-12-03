@@ -269,8 +269,9 @@ class FileCapturerTrackSource : public webrtc::VideoTrackSource {
 }  // namespace
 
 Conductor::Conductor(PeerConnectionClient* client, MainWindow* main_wnd)
-    : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd),isp2p(false), source_type(Media_Source_Type::SOURCE_NULL) {
-#if defined(WEBRTC_WIN)
+    : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd),isp2p(false), 
+    remote_ready(false), source_type(Media_Source_Type::SOURCE_FILE) {
+#if 1//defined(WEBRTC_WIN)
   FileLog* _LogStream = new FileLog("logs");
   rtc::LogMessage::AddLogToStream(_LogStream, rtc::LS_INFO); //1: error,rtc::LS_ERROR; 2: warning,rtc::LS_WARNING 3: rtc::LS_INFO info
 #endif  
@@ -320,7 +321,6 @@ bool Conductor::InitializePeerConnection() {
   }
  
   AddTracks();
-
   return peer_connection_ != nullptr;
 }
 
@@ -625,16 +625,15 @@ void Conductor::addIceCandidate(std::string& sdp_mid, int sdp_mlineindex, std::s
 	webrtc::IceCandidateInterface* candidate = 
 			webrtc::CreateIceCandidate(sdp_mid, sdp_mlineindex, sdp, &error);
 		
-
 	if (!candidate/*!candidate.get()*/) {
       RTC_LOG(WARNING) << "Can't parse received candidate message. "
                        << "SdpParseError was: " << error.description;
       return;
     }
 	RTC_LOG(INFO) << " candidate ok";
-	if(!peer_connection_.get()){
+	while(!peer_connection_.get()||!remote_ready){
 		RTC_LOG(INFO) << "peer_connection_ failed";
-		//MSLEEP(100);
+		MSLEEP(100);
 	}
 	main_wnd_->QueueUIThreadCallback(ON_ADD_ICE_CANDIDATE, candidate/*candidate.get()*/);
 	RTC_LOG(INFO) << " Received candidate :" << sdp;
@@ -791,6 +790,7 @@ void Conductor::SetRemoteDescription(const std::string* c_sdp){//SetRemoteDescri
 		  peer_connection_->CreateAnswer(
 			  this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 		}
+		remote_ready = true;
 }
 
 std::string Conductor::sdp_rate_set(int rate, const std::string &sdp)
@@ -933,7 +933,7 @@ void Conductor::AddTracks() {
                       << result_or_error.error().message();
   }
 
-  if(1/*source_type == Media_Source_Type::SOURCE_FILE*/) {
+  if(source_type == Media_Source_Type::SOURCE_FILE) {
   	rtc::scoped_refptr<FileCapturerTrackSource> file_video_device =
       FileCapturerTrackSource::Create();
 	if(file_video_device){
@@ -952,7 +952,7 @@ void Conductor::AddTracks() {
   	}
   	
   }
-  else if(0/*source_type == Media_Source_Type::SOURCE_HW*/){
+  else if(1/*source_type == Media_Source_Type::SOURCE_HW*/){
   	rtc::scoped_refptr<CapturerTrackSource> video_device =
       CapturerTrackSource::Create();
 	if(video_device){
@@ -986,6 +986,7 @@ void Conductor::DisconnectFromCurrentPeer() {
 }
 
 void Conductor::UIThreadCallback(int msg_id, void* data) {
+  //pc_mutex.lock();
   switch (msg_id) {
     case PEER_CONNECTION_CLOSED:
       RTC_LOG(INFO) << "PEER_CONNECTION_CLOSED";
@@ -1052,17 +1053,20 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
 		break;
 	}
 	case ON_READY_WITHID:{
+		RTC_LOG(INFO) << "ON_READY_WITHID";
 		//int64_t* id = reinterpret_cast<int64_t *>(data);
 		OnReady_Id();
 		//main_wnd_->SwitchToStreamingUI1();
 		break;
 	}
 	case ON_SET_REMOTE_DESCRIPTION:{
+		RTC_LOG(INFO) << "ON_SET_REMOTE_DESCRIPTION";
 		std::string* msg = reinterpret_cast<std::string*>(data);
 		SetRemoteDescription(msg);
 		break;
 	}
 	case ON_ADD_ICE_CANDIDATE:{
+		RTC_LOG(INFO) << "ON_ADD_ICE_CANDIDATE";
 		webrtc::IceCandidateInterface *ice = reinterpret_cast<webrtc::IceCandidateInterface*>(data);
 		AddIceCandidate(ice);
 		break;
@@ -1071,6 +1075,7 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
       RTC_NOTREACHED();
       break;
   }
+  //pc_mutex.unlock();
 }
 
 void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {//InternalCreateOffer或者InternalCreateAnswer success

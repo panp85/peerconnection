@@ -525,6 +525,7 @@ void GtkMainWnd::OnClicked(GtkWidget* widget) {
   server_ = gtk_entry_get_text(GTK_ENTRY(server_edit_));
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
+  setMediaSource();
   callback_->StartLogin(server_, port); 
   //callback_->connect2janusServer(0);
 }
@@ -537,7 +538,7 @@ void GtkMainWnd::OnClicked_janus(GtkWidget* widget) {
   server_ = gtk_entry_get_text(GTK_ENTRY(server_edit_));
   port_ = gtk_entry_get_text(GTK_ENTRY(port_edit_));
   int port = port_.length() ? atoi(port_.c_str()) : 0;
-  
+  setMediaSource();
   callback_->connect2janusServer(false);
 
 }
@@ -576,7 +577,7 @@ void GtkMainWnd::OnClicked_janus_p2p(GtkWidget* widget) {
   	callback_->setSourceType(SOURCE_FILE);
   }
   #endif
-  
+  setMediaSource();
   callback_->connect2janusServer(true);
 }
 
