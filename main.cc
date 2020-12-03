@@ -42,7 +42,7 @@ int PASCAL wWinMain(HINSTANCE instance,
   
   // 保存cout流缓冲区指针
   std::streambuf* coutBuf = std::cout.rdbuf();
-  std::ofstream of("webrtc.log", std::ios::app);
+  std::ofstream of("logs/webrtc.log", std::ios::app);
   // 获取文件out.txt流缓冲区指针
   std::streambuf* fileBuf = of.rdbuf();
   // 设置cout流缓冲区指针为out.txt的流缓冲区指针
@@ -58,7 +58,6 @@ int PASCAL wWinMain(HINSTANCE instance,
   //fflush(fp);
   //of.flush();
 
-  //while(1){Sleep(1000);}
   rtc::ThreadManager::Instance()->SetCurrentThread(&w32_thread);
 
   rtc::WindowsCommandLineArguments win_args;

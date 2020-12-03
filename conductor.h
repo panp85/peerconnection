@@ -45,6 +45,8 @@ class Conductor : public webrtc::PeerConnectionObserver,
     TRACK_REMOVED,
     ON_READY_NOID,
     ON_READY_WITHID,
+    ON_SET_REMOTE_DESCRIPTION,
+    ON_ADD_ICE_CANDIDATE,
   };
   enum OFFER_TYPE{
   	OFFER_ANSWER,
@@ -109,7 +111,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
 
   //add by pp
   void OnReady() override;//go to create offer
-  void OnReady_withId(int64_t id, int offer) override;//go to create offer
+  void OnReady_withId(int64_t peer_id, int offer) override;//go to create offer
   void setRemoteDescription(int c_type, const std::string& c_sdp) override;
   void createOffer() override;
   //
@@ -147,6 +149,9 @@ class Conductor : public webrtc::PeerConnectionObserver,
   
   bool isp2p;
   Media_Source_Type source_type;
+  webrtc::SdpType type;
+  void AddIceCandidate(const webrtc::IceCandidateInterface* ice_candidate);
+  void SetRemoteDescription(const std::string* c_sdp);
   //pthread_t hHandle;
   static void* janus_fun(void *callback);
   void OnReady_noId();

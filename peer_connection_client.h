@@ -41,7 +41,7 @@ struct PeerConnectionClientObserver {
   virtual void OnMessageSent(int err) = 0;
   virtual void OnServerConnectionFailure() = 0;
   virtual void OnReady() = 0;
-  virtual void OnReady_withId(int64_t id, int offer) = 0;
+  virtual void OnReady_withId(int64_t peer_id, int offer) = 0;
   virtual void addIceCandidate(std::string& sdp_mid, int sdp_mlineindex, std::string& sdp) = 0;
   virtual void setRemoteDescription(int c_type, const std::string& c_sdp) = 0;
   virtual void createOffer() = 0;
@@ -56,7 +56,7 @@ public:
     //~JanusProxyProtocolDelegate(){};
 
     void onReady() override;
-	void onReady_withId(int64_t id, int offer) override;
+	void onReady_withId(int64_t peer_id, int offer) override;
     void onClose() override;
     void onError(const ::Janus::JanusError & error, const std::shared_ptr<::Janus::Bundle> & context) override;
     void onEvent(const std::shared_ptr<::Janus::JanusEvent> & event, const std::shared_ptr<::Janus::Bundle> & context) override;

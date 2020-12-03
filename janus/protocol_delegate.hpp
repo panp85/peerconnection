@@ -19,7 +19,7 @@ public:
     virtual ~ProtocolDelegate() {}
 
     virtual void onReady() = 0;
-	virtual void onReady_withId(int64_t id, int offer) = 0;
+	virtual void onReady_withId(int64_t peer_id, int offer) = 0;
 
     virtual void onClose() = 0;
 

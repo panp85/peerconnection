@@ -173,8 +173,8 @@ void JanusProxyProtocolDelegate::onReady() {
 	callback_->OnReady();
 }
 
-void JanusProxyProtocolDelegate::onReady_withId(int64_t id, int offer) {
-	callback_->OnReady_withId(id, offer);
+void JanusProxyProtocolDelegate::onReady_withId(int64_t peer_id, int offer) {
+	callback_->OnReady_withId(peer_id, offer);
 }
 
 void JanusProxyProtocolDelegate::setCallback(struct PeerConnectionClientObserver *callback){

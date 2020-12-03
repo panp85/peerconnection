@@ -609,25 +609,35 @@ void Conductor::OnMessageFromPeer(int peer_id, const std::string& message) {
   }
 }
 
+void Conductor::AddIceCandidate(const webrtc::IceCandidateInterface* ice_candidate){
+	if (!peer_connection_->AddIceCandidate(ice_candidate)) {
+	  delete ice_candidate;
+      RTC_LOG(WARNING) << "Failed to apply the received candidate";
+      return;
+    }
+	delete ice_candidate;
+}
+
 void Conductor::addIceCandidate(std::string& sdp_mid, int sdp_mlineindex, std::string& sdp){
 	webrtc::SdpParseError error;
-    std::unique_ptr<webrtc::IceCandidateInterface> candidate(
-        webrtc::CreateIceCandidate(sdp_mid, sdp_mlineindex, sdp, &error));
-    if (!candidate.get()) {
+    //std::unique_ptr<webrtc::IceCandidateInterface> candidate(
+    //    webrtc::CreateIceCandidate(sdp_mid, sdp_mlineindex, sdp, &error));
+	webrtc::IceCandidateInterface* candidate = 
+			webrtc::CreateIceCandidate(sdp_mid, sdp_mlineindex, sdp, &error);
+		
+
+	if (!candidate/*!candidate.get()*/) {
       RTC_LOG(WARNING) << "Can't parse received candidate message. "
                        << "SdpParseError was: " << error.description;
       return;
     }
 	RTC_LOG(INFO) << " candidate ok";
-	while(!peer_connection_.get()){
+	if(!peer_connection_.get()){
 		RTC_LOG(INFO) << "peer_connection_ failed";
-		MSLEEP(100);
+		//MSLEEP(100);
 	}
-    if (!peer_connection_->AddIceCandidate(candidate.get())) {
-      RTC_LOG(WARNING) << "Failed to apply the received candidate";
-      return;
-    }
-    RTC_LOG(INFO) << " Received candidate :" << sdp;
+	main_wnd_->QueueUIThreadCallback(ON_ADD_ICE_CANDIDATE, candidate/*candidate.get()*/);
+	RTC_LOG(INFO) << " Received candidate :" << sdp;
 }
 
 
@@ -679,10 +689,25 @@ void Conductor::replace_all_distinct(std::string&           str, const std::stri
     }     
     //return str;     
 }     
+void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){
+	std::string *s = new std::string(c_sdp);
+	
+	type = webrtc::SdpType::kOffer;// = *type_maybe;
+	if(c_type == 0){
+		RTC_LOG(LS_ERROR) << "setRemoteDescription offer";
+		type = webrtc::SdpType::kOffer;
+	}
+	else if(c_type == 1){
+		RTC_LOG(LS_ERROR) << "setRemoteDescription answer";
+		type = webrtc::SdpType::kAnswer;
+	}
+	
+	main_wnd_->QueueUIThreadCallback(ON_SET_REMOTE_DESCRIPTION, s);
+}
 
-void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//SetRemoteDescription
+void Conductor::SetRemoteDescription(const std::string* c_sdp){//SetRemoteDescription
 	//RTC_DCHECK(peer_id_ == peer_id || peer_id_ == -1);
-	  RTC_DCHECK(!c_sdp.empty());
+	  RTC_DCHECK(!c_sdp->empty());
 	
 	  if (!peer_connection_.get()) {
 		RTC_DCHECK(peer_id_ == -1);
@@ -734,15 +759,7 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		  return;
 		}
 		*/
-		webrtc::SdpType type = webrtc::SdpType::kOffer;// = *type_maybe;
-		if(c_type == 0){
-			RTC_LOG(LS_ERROR) << "setRemoteDescription offer";
-			type = webrtc::SdpType::kOffer;
-		}
-		else if(c_type == 1){
-			RTC_LOG(LS_ERROR) << "setRemoteDescription answer";
-			type = webrtc::SdpType::kAnswer;
-		}
+		
 		//webrtc::SdpType type = *type_maybe;
 		/*
 		std::string sdp;
@@ -755,7 +772,7 @@ void Conductor::setRemoteDescription(int c_type, const std::string& c_sdp){//Set
 		webrtc::SdpParseError error;
 		
 		//c_sdp.replace("c=IN IP4 139.196.204.25\r\n", "c=IN IP4 139.196.204.25\r\nb=AS:100\r\n");
-		std::string s = sdp_rate_set(-1, c_sdp);
+		std::string s = sdp_rate_set(-1, *c_sdp);
 		
 		RTC_LOG(INFO) << " Received session description :" << s;
 		std::unique_ptr<webrtc::SessionDescriptionInterface> session_description =
@@ -888,8 +905,8 @@ void Conductor::OnReady() {
   main_wnd_->QueueUIThreadCallback(ON_READY_NOID, NULL);
 }
 
-void Conductor::OnReady_withId(int64_t id, int offer) {
-  peer_id_ = id;
+void Conductor::OnReady_withId(int64_t peer_id, int offer) {
+  peer_id_ = peer_id;
   if(!offer){
   	offer_type = OFFER_ANSWER;
   }
@@ -1038,6 +1055,16 @@ void Conductor::UIThreadCallback(int msg_id, void* data) {
 		//int64_t* id = reinterpret_cast<int64_t *>(data);
 		OnReady_Id();
 		//main_wnd_->SwitchToStreamingUI1();
+		break;
+	}
+	case ON_SET_REMOTE_DESCRIPTION:{
+		std::string* msg = reinterpret_cast<std::string*>(data);
+		SetRemoteDescription(msg);
+		break;
+	}
+	case ON_ADD_ICE_CANDIDATE:{
+		webrtc::IceCandidateInterface *ice = reinterpret_cast<webrtc::IceCandidateInterface*>(data);
+		AddIceCandidate(ice);
 		break;
 	}
     default:
