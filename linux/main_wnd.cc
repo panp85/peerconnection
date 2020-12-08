@@ -184,7 +184,9 @@ GtkMainWnd::GtkMainWnd(const char* server,
       callback_(NULL),
       server_(server),
       autoconnect_(autoconnect),
-      autocall_(autocall) {
+      autocall_(autocall),
+      width_(0),
+      height_(0){
   char buffer[10];
   snprintf(buffer, sizeof(buffer), "%i", port);
   port_ = buffer;
@@ -643,14 +645,16 @@ void GtkMainWnd::OnRedraw() {
 
   const uint32_t* image;
   uint32_t* scaled;
-  
   if (remote_renderer && remote_renderer->image() != NULL &&
       draw_area_ != NULL/* && (flag++%2==0)*/) {
-      
-    width_ = remote_renderer->width();
-    height_ = remote_renderer->height();
-//	std::cout << "remote width_, height_: " << width_ << ", " <<  height_ << std::endl;
-    if (!draw_buffer_.get()) {
+      Lock lock_local(&local_renderer_.get()->image_mutex);
+	  Lock lock_remote(&remote_renderer_.get()->image_mutex);
+    //width_ = remote_renderer->width();
+    //height_ = remote_renderer->height();
+	std::cout << "remote width_, height_: " << width_ << ", " <<  height_ << std::endl;
+    if (/*!draw_buffer_.get()*/width_ != remote_renderer->width() || height_ != remote_renderer->height()) {
+	  width_ = remote_renderer->width();
+      height_ = remote_renderer->height();
       draw_buffer_size_ = (width_ * height_ * 4) * 4;
       draw_buffer_.reset(new uint8_t[draw_buffer_size_]);
       gtk_widget_set_size_request(draw_area_, width_ * 2, height_ * 2);
@@ -704,6 +708,34 @@ void GtkMainWnd::OnRedraw() {
       }
     }
 	*/
+	VideoRenderer* local_renderer = local_renderer_.get();
+    if (local_renderer && local_renderer->image()) {
+		
+      image = reinterpret_cast<const uint32_t*>(local_renderer->image());
+      scaled = reinterpret_cast<uint32_t*>(draw_buffer_.get());
+      // Position the local preview on the right side.
+      scaled += (width_ * 2) - (local_renderer->width() / 2);
+      // right margin...
+      scaled -= 10;
+      // ... towards the bottom.
+      scaled += (height_ * width_ * 4) - ((local_renderer->height() / 2) *
+                                          (local_renderer->width() / 2) * 4);
+	  std::cout << "local width_, height_: " << local_renderer->height() << ", " <<  local_renderer->width() << std::endl;
+      // bottom margin...
+      scaled -= (width_ * 2) * 5;                                                                                   
+      for (int r = 0; r < local_renderer->height(); r += 2) {
+        for (int c = 0; c < local_renderer->width(); c += 2) {
+		  if((int)(scaled + c/2 - reinterpret_cast<uint32_t*>(draw_buffer_.get())  )< 0 
+		  	|| (int)(scaled + c/2 - reinterpret_cast<uint32_t*>(draw_buffer_.get())) >= (draw_buffer_size_/4)
+		  	/*|| (c + r * local_renderer->width()) >= (local_renderer->height()* local_renderer->width()-4)*/){
+		  	std::cout << "error:  " << (scaled + c/2 - reinterpret_cast<uint32_t*>(draw_buffer_.get())) << std::endl;
+			break;
+		  }
+          scaled[c / 2] = image[c + r * local_renderer->width()];
+        }
+        scaled += width_ * 2;
+      }
+    }
 #if GTK_MAJOR_VERSION == 2
     gdk_draw_rgb_32_image(draw_area_->window,
                           draw_area_->style->fg_gc[GTK_STATE_NORMAL], 0, 0,
@@ -741,15 +773,18 @@ GtkMainWnd::VideoRenderer::VideoRenderer(
       height_(0),
       main_wnd_(main_wnd),
       rendered_track_(track_to_render) {
+  pthread_mutex_init(&image_mutex,NULL);
   rendered_track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
 }
 
 GtkMainWnd::VideoRenderer::~VideoRenderer() {
+  pthread_mutex_destroy(&image_mutex);
   rendered_track_->RemoveSink(this);
 }
 
 void GtkMainWnd::VideoRenderer::SetSize(int width, int height) {
   gdk_threads_enter();
+  
 
   if (width_ == width && height_ == height) {
     return;
@@ -763,7 +798,7 @@ void GtkMainWnd::VideoRenderer::SetSize(int width, int height) {
 
 void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
 	std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
-
+	Lock lock(&image_mutex);
 	//return;
   gdk_threads_enter();
   
@@ -774,7 +809,7 @@ void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
     buffer = webrtc::I420Buffer::Rotate(*buffer, video_frame.rotation());
   }
   
-  //std::cout << "ppt, GtkMainWnd::VideoRenderer::OnFrame: " << buffer->width() << ","  << buffer->height() <<  std::endl;
+  std::cout << "ppt, GtkMainWnd::VideoRenderer::OnFrame: " << buffer->width() << ","  << buffer->height() <<  std::endl;
   SetSize(buffer->width(), buffer->height());  
 
   // The order in the name of libyuv::I420To(ABGR,RGBA) is ambiguous because

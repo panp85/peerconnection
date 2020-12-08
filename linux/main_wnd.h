@@ -100,6 +100,7 @@ class GtkMainWnd : public MainWindow {
     int width() const { return width_; }
 
     int height() const { return height_; }
+   pthread_mutex_t image_mutex;
 
    protected:
     void SetSize(int width, int height);
@@ -109,6 +110,18 @@ class GtkMainWnd : public MainWindow {
     GtkMainWnd* main_wnd_;
     rtc::scoped_refptr<webrtc::VideoTrackInterface> rendered_track_;
   };
+  
+ // A little helper class to make sure we always to proper locking and
+   // unlocking when working with VideoRenderer buffers.
+   template <typename T>
+   class AutoLock {
+	public:
+	 explicit AutoLock(T* obj) : obj_(obj) { obj_->Lock(); }
+	 ~AutoLock() { obj_->Unlock(); }
+ 
+	protected:
+	 T* obj_;
+   };
 
  protected:
   GtkWidget* window_;     // Our main window.
@@ -134,6 +147,7 @@ class GtkMainWnd : public MainWindow {
 
   int flag =0;
 
+  
 
 };
 

@@ -88,6 +88,7 @@ namespace Janus {
 	  	return;
 	  }
       auto content = nlohmann::json::parse(reply->body());
+	  
       this->_delegate->onMessage(content, context);
 
       notEmptyLock.lock();
