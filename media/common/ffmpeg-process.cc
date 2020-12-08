@@ -23,6 +23,7 @@ using namespace  webrtc;
 
 int FfmpegMediaProcess::init(std::string inputFileName){
 	video_stream_index = ffmpeg_init(inputFileName.c_str());
+	file_fd = fopen("TEST.yuv","wb+");
     return 0;
 }
 
@@ -54,6 +55,12 @@ void FfmpegMediaProcess::process_thread(FfmpegMediaProcess *ffmp){
 	ffmp->process();
 }
 
+
+void FfmpegMediaProcess::write_file(unsigned char *buf, int len){
+	if(file_fd)
+		fwrite(buf, 1, len, file_fd);
+}
+
 void FfmpegMediaProcess::process(){
 	AVPacket packet;
     AVFrame *frame = av_frame_alloc();
@@ -81,7 +88,7 @@ void FfmpegMediaProcess::process(){
 			if (got_frame == 1) {
 				/* Unreference all the buffers referenced by frame and reset the frame fields. */
 				rtc::scoped_refptr<I420Buffer> buffer = I420Buffer::Create(
- 					 frame->width, frame->height, frame->width, (frame->width + 1) / 2, (frame->width + 1) / 2);
+ 					 frame->width, frame->height, frame->width, frame->width / 2, frame->width / 2);
 				/*
 				const int conversionResult = libyuv::ConvertToI420(
 			      videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
@@ -91,24 +98,28 @@ void FfmpegMediaProcess::process(){
 			      width, height, target_width, target_height, rotation_mode,
 			      ConvertVideoType(frameInfo.videoType));
 				*/
-				std::cout << "frame: " << frame->width << "," << frame->height << std::endl;
+				std::cout << "frame: " << frame->width << "," << frame->height 
+					<< "; linesize: " <<frame->linesize[0] <<", "<< frame->linesize[1] << ", "<< frame->linesize[2] << std::endl;
 				for(int i = 0; i < frame->height; i++){
 					//memcpy(buffer.get()->MutableDataY()+ i*frame->width, 
 					memcpy(buffer.get()->MutableDataY()+ i*buffer.get()->StrideY(), 
 						frame->data[0]+i*frame->linesize[0], 
 						frame->width);
+					write_file(frame->data[0]+i*frame->linesize[0], frame->width);
 				}
 				for(int i = 0; i < frame->height/2; i++){
 					//memcpy(buffer.get()->MutableDataU()+ i*(frame->width+1)/2,
-					memcpy(buffer.get()->MutableDataU()+ buffer.get()->StrideU(),
+					memcpy(buffer.get()->MutableDataU()+ i*buffer.get()->StrideU(),
 						frame->data[1]+i*frame->linesize[1], 
-						(frame->width+1)/2);
+						frame->width/2);
+					write_file(frame->data[1]+i*frame->linesize[1], frame->width/2);
 				}
 				for(int i = 0; i < frame->height/2; i++){
 					//memcpy(buffer.get()->MutableDataV()+ i*(frame->width+1)/2,
 					memcpy(buffer.get()->MutableDataV()+ i*buffer.get()->StrideV(),
 						frame->data[2]+i*frame->linesize[2],
-						(frame->width+1)/2);
+						frame->width/2);
+					write_file(frame->data[2]+i*frame->linesize[2], frame->width/2);
 				}
 				
 				VideoFrame captureFrame =
@@ -126,9 +137,9 @@ void FfmpegMediaProcess::process(){
 			//av_frame_unref(frame);
 		}
 		#if defined(WEBRTC_LINUX)
-		usleep(30*1000);
+		usleep(5*1000);
 		#elif defined(WEBRTC_WIN)
-		Sleep(30);
+		Sleep(5);
 		#endif
 		//av_packet_unref(&packet);
 	}

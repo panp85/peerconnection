@@ -30,6 +30,7 @@ public:
 	void process();
 	static FfmpegMediaProcess* Create(); 
 	static FfmpegMediaProcess* ffmp;
+	void write_file(unsigned char *buf, int len);
 
 	void start();
 	void stop();
@@ -51,5 +52,7 @@ public:
 
 	bool running;
 	std::thread threadObj;
+
+	FILE *file_fd;
 };
 #endif
