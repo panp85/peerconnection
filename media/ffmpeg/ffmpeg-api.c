@@ -61,7 +61,7 @@ int ffmpeg_init(const char* inputFileName) {
 int ffmpeg_av_read_frame(AVPacket* packet) {
   int ret;
   if(!packet){return -1;}
-  av_packet_unref(&packet);
+  //av_packet_unref(packet);
   if ((ret = av_read_frame(fmt_ctx, packet)) < 0)
     return ret;
   return 0;
@@ -70,7 +70,7 @@ int ffmpeg_av_read_frame(AVPacket* packet) {
 int ffmpeg_get_buffer_fromCodec(AVPacket* packet, AVFrame* frame) {
   //int got_frame = 0;
   if(!frame){return -1;}
-  av_frame_unref(frame);
+  //av_frame_unref(frame);
   int ret = avcodec_send_packet(dec_ctx, packet);
   if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
     return 0;
