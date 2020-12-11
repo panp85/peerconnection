@@ -647,8 +647,6 @@ void GtkMainWnd::OnRedraw() {
   uint32_t* scaled;
   if (remote_renderer && remote_renderer->image() != NULL &&
       draw_area_ != NULL/* && (flag++%2==0)*/) {
-      Lock lock_local(&local_renderer_.get()->image_mutex);
-	  Lock lock_remote(&remote_renderer_.get()->image_mutex);
     //width_ = remote_renderer->width();
     //height_ = remote_renderer->height();
 	std::cout << "remote width_, height_: " << width_ << ", " <<  height_ << std::endl;
@@ -773,12 +771,10 @@ GtkMainWnd::VideoRenderer::VideoRenderer(
       height_(0),
       main_wnd_(main_wnd),
       rendered_track_(track_to_render) {
-  pthread_mutex_init(&image_mutex,NULL);
   rendered_track_->AddOrUpdateSink(this, rtc::VideoSinkWants());
 }
 
 GtkMainWnd::VideoRenderer::~VideoRenderer() {
-  pthread_mutex_destroy(&image_mutex);
   rendered_track_->RemoveSink(this);
 }
 
@@ -798,7 +794,6 @@ void GtkMainWnd::VideoRenderer::SetSize(int width, int height) {
 
 void GtkMainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
 	std::cout<<"GtkMainWnd::VideoRenderer::OnFrame.\n";
-	Lock lock(&image_mutex);
 	//return;
   gdk_threads_enter();
   

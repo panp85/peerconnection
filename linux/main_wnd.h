@@ -100,7 +100,6 @@ class GtkMainWnd : public MainWindow {
     int width() const { return width_; }
 
     int height() const { return height_; }
-   pthread_mutex_t image_mutex;
 
    protected:
     void SetSize(int width, int height);

@@ -270,7 +270,7 @@ class FileCapturerTrackSource : public webrtc::VideoTrackSource {
 
 Conductor::Conductor(PeerConnectionClient* client, MainWindow* main_wnd)
     : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd),isp2p(false), 
-    remote_ready(false), source_type(Media_Source_Type::SOURCE_FILE) {
+    source_type(Media_Source_Type::SOURCE_FILE), remote_ready(false)  {
 #if 1//defined(WEBRTC_WIN)
   FileLog* _LogStream = new FileLog("logs");
   rtc::LogMessage::AddLogToStream(_LogStream, rtc::LS_INFO); //1: error,rtc::LS_ERROR; 2: warning,rtc::LS_WARNING 3: rtc::LS_INFO info
@@ -952,7 +952,7 @@ void Conductor::AddTracks() {
   	}
   	
   }
-  else if(1/*source_type == Media_Source_Type::SOURCE_HW*/){
+  else if(source_type == Media_Source_Type::SOURCE_HW){
   	rtc::scoped_refptr<CapturerTrackSource> video_device =
       CapturerTrackSource::Create();
 	if(video_device){
