@@ -150,7 +150,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool isp2p;
   Media_Source_Type source_type;
   webrtc::SdpType type;
-  std::mutex pc_mutex;
+  
   bool remote_ready;
   void AddIceCandidate(const webrtc::IceCandidateInterface* ice_candidate);
   void SetRemoteDescription(const std::string* c_sdp);

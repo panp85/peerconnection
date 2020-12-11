@@ -343,6 +343,16 @@ void MainWnd::OnDestroyed() {
 void MainWnd::OnDefaultAction() {
   if (!callback_)
     return;
+  int si =  ::SendMessage(source_select, CB_GETCURSEL, 0, 0);
+  if(si == 0){
+  	callback_->setSourceType(Media_Source_Type::SOURCE_FILE);
+  }
+  else if (si == 1){
+  	callback_->setSourceType(Media_Source_Type::SOURCE_HW);
+  }
+  else {
+  	callback_->setSourceType(Media_Source_Type::SOURCE_NULL);
+  }
   if (ui_ == CONNECT_TO_SERVER) {
     std::string server(GetWindowText(edit1_));
     std::string port_str(GetWindowText(edit2_));
@@ -403,7 +413,8 @@ bool MainWnd::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT* result) {
       *result = reinterpret_cast<LRESULT>(GetSysColorBrush(COLOR_WINDOW));
       return true;
 
-    case WM_COMMAND:
+    case WM_COMMAND:{
+	  
       if (button_ori == reinterpret_cast<HWND>(lp)) {
         if (BN_CLICKED == HIWORD(wp))
           OnDefaultAction();
@@ -421,6 +432,7 @@ bool MainWnd::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT* result) {
           OnDefaultAction();
 		  ui_ = CONNECT_TO_JANUSSERVER_P2P;
         }
+      }
       }
       return true;
 
@@ -526,7 +538,7 @@ void MainWnd::CreateChildWindows() {
                     LBS_HASSTRINGS | LBS_NOTIFY, WS_EX_CLIENTEDGE);
 
   ::SendMessage(source_select , CB_ADDSTRING, 0, (LPARAM)L"local file");
-  ::SendMessage(source_select , CB_ADDSTRING, 0, (LPARAM)L"camera");
+  ::SendMessage(source_select , CB_ADDSTRING, 0, (LPARAM)L"hw_camera");
 
   ::SendMessage(source_select , CB_SETCURSEL, 0, 0);
 

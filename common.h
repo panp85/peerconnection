@@ -15,24 +15,5 @@ enum class Media_Source_Type{
 #define MSLEEP(x) Sleep(x)
 #endif
 
-class Lock {
-	public:
-		explicit Lock(pthread_mutex_t *pMutex):m_pMutex(pMutex)
-		{
-
-			pthread_mutex_lock(m_pMutex);
-		}
-
-		virtual ~Lock()
-		{
-
-			pthread_mutex_unlock(m_pMutex);
-		}
-
-
-	private:
-		pthread_mutex_t *m_pMutex;
-};
-
 #endif
 
