@@ -54,5 +54,6 @@ public:
 	std::thread threadObj;
 
 	FILE *file_fd;
+	std::string file_name;
 };
 #endif

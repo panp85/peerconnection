@@ -22,8 +22,10 @@
 using namespace  webrtc;
 
 int FfmpegMediaProcess::init(std::string inputFileName){
+	file_name = inputFileName;
 	video_stream_index = ffmpeg_init(inputFileName.c_str());
 	file_fd = fopen("TEST.yuv","wb+");
+	
     return 0;
 }
 
@@ -75,6 +77,9 @@ void FfmpegMediaProcess::process(){
 	
 	while(running){
 		if ((ret = ffmpeg_av_read_frame(&packet)) < 0){
+			if(ret == AVERROR_EOF){
+				video_stream_index = ffmpeg_init(file_name.c_str());
+			}
 			#if defined(WEBRTC_LINUX)
 			usleep(1000);
 			#elif defined(WEBRTC_WIN)
@@ -85,7 +90,10 @@ void FfmpegMediaProcess::process(){
 		
 		if (packet.stream_index == video_stream_index) {
 			got_frame = ffmpeg_get_buffer_fromCodec(&packet, frame);
-			if (got_frame == 1) {
+			if(got_frame == 2){
+				video_stream_index = ffmpeg_init(file_name.c_str());
+			}
+			else if (got_frame == 1) {
 				/* Unreference all the buffers referenced by frame and reset the frame fields. */
 				rtc::scoped_refptr<I420Buffer> buffer = I420Buffer::Create(
  					 frame->width, frame->height, frame->width, frame->width / 2, frame->width / 2);
