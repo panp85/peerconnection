@@ -160,8 +160,8 @@ void JanusPeerFactory::onIceCompleted(){
 }
 
 std::string Janus::JanusProxyConf::url(){
-	return "http://192.168.8.109:8088/janus";
-	//return "http://139.196.204.25:8088/janus";
+	//return "http://192.168.8.109:8088/janus";
+	return "http://139.196.204.25:8088/janus";
 }
 
 std::string Janus::JanusProxyConf::plugin(){

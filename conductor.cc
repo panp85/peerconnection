@@ -141,9 +141,9 @@ class FileLog : public rtc::LogSink {
       //QString timeString = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
       string msgString;
       //msgString = timeString.toStdString() + message;
-	  // 基于当前系统的当前日期/时间
+	  // 基于当前系统的当前日�?时间
    		time_t now = time(0);
-	   // 把 now 转换为字符串形式
+	   // �?now 转换为字符串形式
 	   //char* dt = ctime(&now);
 	   //msgString = string(dt) + message;
 	   tm *ltm = localtime(&now);
@@ -269,8 +269,8 @@ class FileCapturerTrackSource : public webrtc::VideoTrackSource {
 }  // namespace
 
 Conductor::Conductor(PeerConnectionClient* client, MainWindow* main_wnd)
-    : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd),isp2p(false), 
-    source_type(Media_Source_Type::SOURCE_FILE), remote_ready(false)  {
+    : peer_id_(-1), loopback_(false), client_(client), main_wnd_(main_wnd),isp2p(false),
+    source_type(Media_Source_Type::SOURCE_FILE),server_t(SERVER_NULL),pSession(NULL), remote_ready(false)  {
 #if 1//defined(WEBRTC_WIN)
   FileLog* _LogStream = new FileLog("logs");
   rtc::LogMessage::AddLogToStream(_LogStream, rtc::LS_INFO); //1: error,rtc::LS_ERROR; 2: warning,rtc::LS_WARNING 3: rtc::LS_INFO info
@@ -357,8 +357,8 @@ bool Conductor::CreatePeerConnection(bool dtls) {
   webrtc::PeerConnectionInterface::IceServer server;
   server.uri = GetPeerConnectionString();
   webrtc::PeerConnectionInterface::IceServer server2;
-  //server2.uri = "turn:139.196.204.25:3478";
-  server2.uri = "turn:192.168.8.109:3478";
+  server2.uri = "turn:139.196.204.25:3478";
+  //server2.uri = "turn:192.168.8.109:3478";
   server2.username = "ts";
   server2.password = "12345678";
   config.servers.push_back(server);
@@ -439,7 +439,9 @@ void Conductor::OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
     }
     return;
   }
-
+  if(server_t == SERVER_SRS){
+  	return;
+  }
 //  Json::StyledWriter writer;
 //  Json::Value jmessage;
 
@@ -466,9 +468,11 @@ void Conductor::OnIceGatheringChange(
     if(new_state != webrtc::PeerConnectionInterface::kIceGatheringComplete) {
       return;
     }
+	if(server_t == SERVER_SRS){
+  		return;
+  	}
     client_->onIceCompleted();
 }
-
 
 //
 // PeerConnectionClientObserver implementation.
@@ -541,7 +545,7 @@ void Conductor::OnMessageFromPeer(int peer_id, const std::string& message) {
   
   rtc::GetStringFromJsonObject(jmessage, kSessionDescriptionTypeName,
                                &type_str);
-	if (!type_str.empty()) {
+  if (!type_str.empty()) {
     if (type_str == "offer-loopback") {
       // This is a loopback call.
       // Recreate the peerconnection with DTLS disabled.
@@ -658,6 +662,15 @@ void Conductor::StartLogin(const std::string& server, int port) {
   if (client_->is_connected())
     return;
   server_ = server;
+  if(server_t == SERVER_SRS){
+  	if (!InitializePeerConnection()) {
+  		RTC_LOG(LS_ERROR) << "SERVER_SRS, InitializePeerConnection failed.";
+		return;
+  	}
+	createOffer();
+	return;
+  	//processRequest();
+  }
   client_->Connect(server, port, GetPeerName());
 }
 
@@ -779,6 +792,7 @@ void Conductor::SetRemoteDescription(const std::string* c_sdp){//SetRemoteDescri
 		if (!session_description) {
 		  RTC_LOG(WARNING) << "Can't parse received session description message. "
 						   << "SdpParseError was: " << error.description;
+		  //free(c_sdp);
 		  return;
 		}
 		
@@ -791,6 +805,7 @@ void Conductor::SetRemoteDescription(const std::string* c_sdp){//SetRemoteDescri
 			  this, webrtc::PeerConnectionInterface::RTCOfferAnswerOptions());
 		}
 		remote_ready = true;
+		//free(c_sdp);
 }
 
 std::string Conductor::sdp_rate_set(int rate, const std::string &sdp)
@@ -807,7 +822,7 @@ std::string Conductor::sdp_rate_set(int rate, const std::string &sdp)
 	//s = str( boost::format("c=IN IP4 139.196.204.25\r\nb=AS:%d\r\n") % rate ); 
 	//sprintf(sc, "c=IN IP4 139.196.204.25\r\nb=AS:%s\r\n", rate)
 	//replace_all_distinct(s, std::string("c=IN IP4 139.196.204.25\r\n"), strtEST);
-	replace_all_distinct(s, std::string("c=IN IP4 192.168.8.109\r\n"), strtEST);    //201201,by pp
+	//replace_all_distinct(s, std::string("c=IN IP4 192.168.8.109\r\n"), strtEST);    //201201,by pp
 	std::string::size_type pos = 0;
     if(   (pos = s.find("c=IN IP4",pos)) != std::string::npos){
 		int next_line_pos = s.find("\r\n", pos);
@@ -1086,6 +1101,7 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {//Internal
   std::string sdp;
   desc->ToString(&sdp);
 	RTC_LOG(LS_ERROR) << "sdp: " << sdp;
+  
   // For loopback test. To save some connecting delay.
   if (loopback_) {
     // Replace message type from "offer" to "answer"
@@ -1097,6 +1113,16 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {//Internal
 	
     return;
   }
+  if(server_t == SERVER_SRS){
+  	  if(!pSession){
+	  	RTC_LOG(LS_ERROR) << "go to new SessionSRS.\n";
+	  	pSession = new SessionSRS(server_);
+	  	pSession->RegisterObserver(this);
+  	  }
+	  RTC_LOG(LS_ERROR) << "go to sendSDP.\n";
+	  pSession->sendSDP(make_shared<string>(sdp));
+	  return;
+	}
 
   Json::StyledWriter writer;
   Json::Value jmessage;

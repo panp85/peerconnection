@@ -22,7 +22,7 @@
 #include "examples/peerconnection/client/main_wnd.h"
 #include "examples/peerconnection/client/peer_connection_client.h"
 #include "examples/peerconnection/client/common.h"
-
+#include "SessionSRS.h"
 
 namespace webrtc {
 class VideoCaptureModule;
@@ -52,7 +52,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   	OFFER_ANSWER,
 	OFFER_OFFER,
   };
-	
+  
   Conductor(PeerConnectionClient* client, MainWindow* main_wnd);
 
   bool connection_active() const;
@@ -149,7 +149,9 @@ class Conductor : public webrtc::PeerConnectionObserver,
   
   bool isp2p;
   Media_Source_Type source_type;
+  Server_Type server_t;
   webrtc::SdpType type;
+  SessionSRS *pSession;
   
   bool remote_ready;
   void AddIceCandidate(const webrtc::IceCandidateInterface* ice_candidate);
@@ -164,6 +166,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   std::string sdp_rate_set(int rate, const std::string &sdp);
 
   void setSourceType(enum Media_Source_Type type) override {source_type = type;}
+  void setServerType(Server_Type st) override {server_t = st;}
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_

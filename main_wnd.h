@@ -20,12 +20,11 @@
 #include "examples/peerconnection/client/peer_connection_client.h"
 #include "media/base/media_channel.h"
 #include "media/base/video_common.h"
-
+#include "common.h"
 #if defined(WEBRTC_WIN)
 #include "rtc_base/win32.h"
 #endif  // WEBRTC_WIN
 #include "examples/peerconnection/client/common.h"
-
 
 class MainWndCallback {
  public:
@@ -37,6 +36,7 @@ class MainWndCallback {
   virtual void Close() = 0;
   virtual void connect2janusServer(bool isp2p) = 0;
  virtual void setSourceType(enum Media_Source_Type type) = 0;
+ virtual void setServerType(Server_Type st) = 0;
 
  protected:
   virtual ~MainWndCallback() {}
@@ -210,6 +210,7 @@ class MainWnd : public MainWindow {
   HWND button_ori;
   HWND button_janus;
   HWND button_janus_p2p;
+  HWND button_srs;
   HWND listbox_;
   bool destroyed_;
   void* nested_msg_;

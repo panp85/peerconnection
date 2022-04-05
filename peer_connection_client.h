@@ -29,7 +29,7 @@
 #include "janus/constraints.hpp"
 #include "janus/peer.hpp"
 #include "janus/bundle_impl.h"
-
+#include "common.h"
 typedef std::map<int, std::string> Peers;
 
 struct PeerConnectionClientObserver {
@@ -45,6 +45,7 @@ struct PeerConnectionClientObserver {
   virtual void addIceCandidate(std::string& sdp_mid, int sdp_mlineindex, std::string& sdp) = 0;
   virtual void setRemoteDescription(int c_type, const std::string& c_sdp) = 0;
   virtual void createOffer() = 0;
+  
  protected:
   virtual ~PeerConnectionClientObserver() {}
 };

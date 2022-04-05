@@ -18,6 +18,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "third_party/libyuv/include/libyuv/convert_argb.h"
+#include "conductor.h"
 
 ATOM MainWnd::wnd_class_ = 0;
 const wchar_t MainWnd::kClassName[] = L"WebRTC_MainWnd";
@@ -250,14 +251,16 @@ void MainWnd::OnPaint() {
 
   VideoRenderer* local_renderer = local_renderer_.get();
   VideoRenderer* remote_renderer = remote_renderer_.get();
+  
   if (ui_ == STREAMING && remote_renderer && local_renderer) {
+  	//return;
     AutoLock<VideoRenderer> local_lock(local_renderer);
     AutoLock<VideoRenderer> remote_lock(remote_renderer);
 
     const BITMAPINFO& bmi = remote_renderer->bmi();
     int height = abs(bmi.bmiHeader.biHeight);
     int width = bmi.bmiHeader.biWidth;
-
+	
     const uint8_t* image = remote_renderer->image();
     if (image != NULL) {
       HDC dc_mem = ::CreateCompatibleDC(ps.hdc);
@@ -432,6 +435,13 @@ bool MainWnd::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT* result) {
           OnDefaultAction();
 		  ui_ = CONNECT_TO_JANUSSERVER_P2P;
         }
+      }else if (button_srs == reinterpret_cast<HWND>(lp)) {
+        if (BN_CLICKED == HIWORD(wp)) {
+			callback_->setServerType(SERVER_SRS);
+		  //server_class = SERVER_SRS;
+          OnDefaultAction();
+		  //ui_ = CONNECT_TO_JANUSSERVER_P2P;
+        }
       }
       }
       return true;
@@ -533,6 +543,7 @@ void MainWnd::CreateChildWindows() {
 
   CreateChildWindow(&button_janus, BUTTON_ID_JANUS, L"Button", BS_CENTER | WS_TABSTOP, 0);
   CreateChildWindow(&button_janus_p2p, BUTTON_ID_JANUS_P2P, L"Button", BS_CENTER | WS_TABSTOP, 0);
+  CreateChildWindow(&button_srs, BUTTON_ID_JANUS_P2P, L"Button", BS_CENTER | WS_TABSTOP, 0);
 
   CreateChildWindow(&listbox_, LISTBOX_ID, L"ListBox",
                     LBS_HASSTRINGS | LBS_NOTIFY, WS_EX_CLIENTEDGE);
@@ -559,6 +570,7 @@ void MainWnd::LayoutConnectUI(bool show) {
       {button_ori, L"Connect"},
       {button_janus, L"Connect_janus"},
       {button_janus_p2p, L"Connect_janus_p2p"},
+      {button_srs, L"Connect_srs"},
   };
 
   if (show) {
@@ -672,6 +684,7 @@ void MainWnd::VideoRenderer::SetSize(int width, int height) {
 
 void MainWnd::VideoRenderer::OnFrame(const webrtc::VideoFrame& video_frame) {
   {
+  	//return;
     AutoLock<VideoRenderer> lock(this);
 
     rtc::scoped_refptr<webrtc::I420BufferInterface> buffer(
