@@ -81,6 +81,8 @@ MainWnd::MainWnd(const char* server,
       button_ori(NULL),
       button_janus(NULL),
       button_janus_p2p(NULL),
+      role_select(NULL),
+      button_srs(NULL),
       listbox_(NULL),
       destroyed_(false),
       nested_msg_(NULL),
@@ -438,6 +440,17 @@ bool MainWnd::OnMessage(UINT msg, WPARAM wp, LPARAM lp, LRESULT* result) {
       }else if (button_srs == reinterpret_cast<HWND>(lp)) {
         if (BN_CLICKED == HIWORD(wp)) {
 			callback_->setServerType(SERVER_SRS);
+			
+			int si =  ::SendMessage(role_select, CB_GETCURSEL, 0, 0);
+			  if(si == 0){
+			  	callback_->setSrsRole(Publish_Play_Role::ROLE_PUBLISHER);
+			  }
+			  else if (si == 1){
+			  	callback_->setSrsRole(Publish_Play_Role::ROLE_PLAYER);
+			  }
+			  else {
+			  	callback_->setSrsRole(Publish_Play_Role::ROLE_PUBLISHER_AND_PLAYER);
+			  }
 		  //server_class = SERVER_SRS;
           OnDefaultAction();
 		  //ui_ = CONNECT_TO_JANUSSERVER_P2P;
@@ -543,15 +556,22 @@ void MainWnd::CreateChildWindows() {
 
   CreateChildWindow(&button_janus, BUTTON_ID_JANUS, L"Button", BS_CENTER | WS_TABSTOP, 0);
   CreateChildWindow(&button_janus_p2p, BUTTON_ID_JANUS_P2P, L"Button", BS_CENTER | WS_TABSTOP, 0);
-  CreateChildWindow(&button_srs, BUTTON_ID_JANUS_P2P, L"Button", BS_CENTER | WS_TABSTOP, 0);
+
+  CreateChildWindow(&label_role_, LABLE_ROLE_ID, L"Static", ES_CENTER | ES_READONLY, 0);
+  CreateChildWindow(&role_select, SELECT_ROLE_ID, L"ComboBox", ES_CENTER|WS_CHILD |WS_VSCROLL | CBS_DROPDOWNLIST |WS_VISIBLE, 0);
+  CreateChildWindow(&button_srs, BUTTON_ID_SRS, L"Button", BS_CENTER | WS_TABSTOP, 0);
 
   CreateChildWindow(&listbox_, LISTBOX_ID, L"ListBox",
                     LBS_HASSTRINGS | LBS_NOTIFY, WS_EX_CLIENTEDGE);
 
   ::SendMessage(source_select , CB_ADDSTRING, 0, (LPARAM)L"local file");
   ::SendMessage(source_select , CB_ADDSTRING, 0, (LPARAM)L"hw_camera");
-
   ::SendMessage(source_select , CB_SETCURSEL, 0, 0);
+
+  ::SendMessage(role_select , CB_ADDSTRING, 0, (LPARAM)L"publisher");
+  ::SendMessage(role_select , CB_ADDSTRING, 0, (LPARAM)L"player");
+  ::SendMessage(role_select , CB_ADDSTRING, 0, (LPARAM)L"publisher and player(all)");
+  ::SendMessage(role_select , CB_SETCURSEL, 0, 0);
 
   ::SetWindowTextA(edit1_, server_.c_str());
   ::SetWindowTextA(edit2_, port_.c_str());
@@ -570,6 +590,7 @@ void MainWnd::LayoutConnectUI(bool show) {
       {button_ori, L"Connect"},
       {button_janus, L"Connect_janus"},
       {button_janus_p2p, L"Connect_janus_p2p"},
+      {label_role_, L"Role:"}, {role_select, L"publisher and player(all)"},
       {button_srs, L"Connect_srs"},
   };
 

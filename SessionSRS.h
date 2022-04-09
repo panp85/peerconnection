@@ -19,7 +19,7 @@ class SessionSRS{
 
 	public:
 		SessionSRS(std::string      server);
-		void sendSDP(const std::shared_ptr<std::string> &sdp);
+		void sendSDP(const std::shared_ptr<std::string> &sdp, const std::string role);
 		void RegisterObserver(PeerConnectionClientObserver* callback);
 	private:
 		std::string server_ip;
@@ -35,7 +35,7 @@ class SessionSRS{
       	std::condition_variable _notEmpty;
 
 		void onMessage(std::shared_ptr<Janus::HttpResponse> httpResponse);
-		void _sendAsync(const std::string body);
+		void _sendAsync(const std::string body, const std::string path);
 };
 //}
 #endif

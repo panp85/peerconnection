@@ -25,13 +25,13 @@ void SessionSRS::RegisterObserver(PeerConnectionClientObserver* callback){
 	_callback = callback;
 }
 
-void SessionSRS::sendSDP(const shared_ptr<string> &sdp){
+void SessionSRS::sendSDP(const shared_ptr<string> &sdp, const string role){
   Json::StyledWriter writer;
   Json::Value jmessage;
   RTC_LOG(LS_ERROR) << "in SessionSRS::sendSDP.";
   RTC_LOG(LS_ERROR) << "server: " << server_ip;
   //while(1){}
-  string url = string("https://") + server_ip + string(":443") + string("/rtc/v1/publish/");
+  string url = string("https://") + server_ip + string(":443") + role;
   //return;
   jmessage["api"] = url.c_str();
   RTC_LOG(LS_ERROR) << url;
@@ -51,7 +51,7 @@ void SessionSRS::sendSDP(const shared_ptr<string> &sdp){
 
   string body = writer.write(jmessage);
   RTC_LOG(LS_ERROR) << body;
-  this->_sendAsync(body);
+  this->_sendAsync(body, role);
   //pHttpTranceiver->post(server, const std :: string & body);
 }
 
@@ -95,7 +95,7 @@ void SessionSRS::onMessage(const std::shared_ptr<HttpResponse> httpResponse){
 	_callback->setRemoteDescription(1, sdp);
 }
 
-void SessionSRS::_sendAsync(const std::string body){
+void SessionSRS::_sendAsync(const std::string body, const std::string path){
     auto task = [=] {
       std::unique_lock<std::mutex> notEmptyLock(this->_tranceiversMutex);
       this->_notEmpty.wait(notEmptyLock, [this] {
@@ -109,7 +109,7 @@ void SessionSRS::_sendAsync(const std::string body){
       
       this->_notEmpty.notify_one();
 
-      std::string path = "/rtc/v1/publish/";
+      //std::string path = "/rtc/v1/publish/";
 
       auto reply = tranceiver->post("http://"+server_ip+":1985" + path, body);
 	  if(!reply){

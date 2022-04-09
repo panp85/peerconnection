@@ -37,6 +37,7 @@ class MainWndCallback {
   virtual void connect2janusServer(bool isp2p) = 0;
  virtual void setSourceType(enum Media_Source_Type type) = 0;
  virtual void setServerType(Server_Type st) = 0;
+ virtual void setSrsRole(Publish_Play_Role role) = 0;
 
  protected:
   virtual ~MainWndCallback() {}
@@ -166,7 +167,10 @@ class MainWnd : public MainWindow {
     BUTTON_ID,
     BUTTON_ID_JANUS,
     BUTTON_ID_JANUS_P2P,
+    BUTTON_ID_SRS,
     SELECT_SOURCE_ID,
+    SELECT_ROLE_ID,
+    LABLE_ROLE_ID,
     LABEL1_ID,
     LABEL2_ID,
     LABEL3_ID,
@@ -206,10 +210,12 @@ class MainWnd : public MainWindow {
   HWND label1_;
   HWND label2_;
   HWND label3_;
+  HWND label_role_;
   HWND source_select;
   HWND button_ori;
   HWND button_janus;
   HWND button_janus_p2p;
+  HWND role_select;
   HWND button_srs;
   HWND listbox_;
   bool destroyed_;

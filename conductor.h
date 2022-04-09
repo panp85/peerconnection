@@ -150,6 +150,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
   bool isp2p;
   Media_Source_Type source_type;
   Server_Type server_t;
+  Publish_Play_Role srs_role;
   webrtc::SdpType type;
   SessionSRS *pSession;
   
@@ -167,6 +168,7 @@ class Conductor : public webrtc::PeerConnectionObserver,
 
   void setSourceType(enum Media_Source_Type type) override {source_type = type;}
   void setServerType(Server_Type st) override {server_t = st;}
+  void setSrsRole(Publish_Play_Role role) override {srs_role = role;}
 };
 
 #endif  // EXAMPLES_PEERCONNECTION_CLIENT_CONDUCTOR_H_

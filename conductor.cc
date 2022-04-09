@@ -937,7 +937,7 @@ void Conductor::AddTracks() {
     return;  // Already added tracks.
   }
   RTC_LOG(LS_ERROR) << "ppt, AddTracks.";
-
+  if(1/*srs_role == ROLE_PUBLISHER*/){
   rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(
       peer_connection_factory_->CreateAudioTrack(
           kAudioLabel, peer_connection_factory_->CreateAudioSource(
@@ -985,6 +985,7 @@ void Conductor::AddTracks() {
     	RTC_LOG(LS_ERROR) << "OpenVideoCaptureDevice failed";
   	}
   } 
+  }
   std::cout << "go to SwitchToStreamingUI" << std::endl;
   main_wnd_->SwitchToStreamingUI1();
 }
@@ -1119,8 +1120,12 @@ void Conductor::OnSuccess(webrtc::SessionDescriptionInterface* desc) {//Internal
 	  	pSession = new SessionSRS(server_);
 	  	pSession->RegisterObserver(this);
   	  }
-	  RTC_LOG(LS_ERROR) << "go to sendSDP.\n";
-	  pSession->sendSDP(make_shared<string>(sdp));
+	  if(srs_role == ROLE_PUBLISHER){
+	  	pSession->sendSDP(make_shared<string>(sdp), string("/rtc/v1/publish/"));
+	  }
+	  else if(srs_role == ROLE_PLAYER){
+	  	pSession->sendSDP(make_shared<string>(sdp), string("/rtc/v1/play/"));
+	  }
 	  return;
 	}
 
